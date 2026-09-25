@@ -49,7 +49,7 @@ body{
 #time .unit{font-size:.42em;font-weight:400;opacity:.72;margin:0 .12em;display:inline-flex;align-items:center}
 .sec-wrap{font-size:.42em;opacity:.72;display:inline-flex;align-items:center;gap:.12em;
   align-self:flex-end;margin:0 0 0 .12em}
-#time.sec-eq .sec-wrap{font-size:1em;opacity:1;align-self:center;margin:0 .12em;padding-bottom:0}
+#time.sec-eq .sec-wrap{font-size:1em;opacity:1;align-self:center;margin:0 .0504em;gap:.0504em;padding-bottom:0}
 #time.sec-eq .sec-wrap .sep{font-size:.42em;font-weight:400;opacity:.72}
 #clock .hint{position:absolute;left:50%;transform:translateX(-50%);bottom:-34px;font-size:13px;letter-spacing:.14em;color:rgba(255,255,255,.5);
   opacity:0;transition:opacity .3s ease;white-space:nowrap}
@@ -129,6 +129,9 @@ body{
 .sHeader h2{font-size:20px;font-weight:600;letter-spacing:.1em}
 .sClose{width:34px;height:34px;border:none;border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:17px;cursor:pointer;transition:background .2s}
 .sClose:hover{background:rgba(255,255,255,.18)}
+.sHeadBtns{display:flex;align-items:center;gap:8px}
+.sLink{height:34px;padding:0 14px;border:none;border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:14px;cursor:pointer;transition:background .2s}
+.sLink:hover{background:rgba(255,255,255,.18)}
 .sGroup{margin-bottom:22px}
 .sLabel{font-size:13px;letter-spacing:.08em;color:rgba(255,255,255,.6);margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .sLabel .val{color:rgba(255,255,255,.85);font-weight:500}
@@ -202,6 +205,30 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 /* 暗化滑块说明文字 */
 .miniHint{font-size:11px;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:.05em}
 #fileInput{display:none}
+
+/* ===== 新手引导 ===== */
+#onboard{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s ease;background:rgba(0,0,0,.6);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#onboard.show{opacity:1;pointer-events:auto}
+#onboardBox{width:620px;max-width:92vw;max-height:88vh;overflow-y:auto;padding:34px 34px 28px;border-radius:18px;
+  background:rgba(18,24,34,.94);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 60px rgba(0,0,0,.55);color:#fff}
+#onboardBox::-webkit-scrollbar{width:0;height:0;display:none}
+#onboardBox{scrollbar-width:none}
+.obHead{text-align:center;margin-bottom:24px}
+.obHead h2{font-size:23px;font-weight:600;letter-spacing:.12em;margin:0 0 8px}
+.obHead p{font-size:14px;color:rgba(255,255,255,.55);margin:0;letter-spacing:.06em}
+.obList{list-style:none;margin:0 0 26px;padding:0;display:flex;flex-direction:column;gap:14px}
+.obList li{font-size:14px;line-height:1.55;color:rgba(255,255,255,.9);
+  padding:11px 14px;border-radius:11px;background:rgba(255,255,255,.05);border-left:3px solid rgba(255,255,255,.35)}
+.obList li b{color:#fff;font-weight:600}
+.obFoot{display:flex;align-items:center;justify-content:center}
+.obBtn{padding:12px 30px;border:none;border-radius:11px;background:#fff;color:#111;
+  font-size:15px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:background .2s,transform .1s}
+.obBtn:hover{background:#e8e8e8}
+.obBtn:active{transform:scale(.97)}
+@media (max-width:600px){#onboardBox{padding:26px 22px 22px}.obFoot{flex-direction:column;gap:14px;align-items:stretch}.obBtn{width:100%}}
 </style>
 </head>
 <body>
@@ -241,7 +268,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 <!-- 设置浮窗 -->
 <div id="settings">
   <div id="settingsBox">
-    <div class="sHeader"><h2>时钟设置</h2><button class="sClose" id="sClose">✕</button></div>
+    <div class="sHeader"><h2>时钟设置</h2><div class="sHeadBtns"><button class="sLink" id="obReopen">引导</button><button class="sClose" id="sClose">✕</button></div></div>
 
     <div class="sGroup">
       <div class="sLabel">时间字体</div>
@@ -328,6 +355,25 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
           <label class="switch"><input type="checkbox" id="swFlip"><span class="slider"></span></label>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新手引导 -->
+<div id="onboard">
+  <div id="onboardBox">
+    <div class="obHead">
+      <h2>欢迎使用自习模拟器</h2>
+      <p>一个帮你保持专注的电子时钟</p>
+    </div>
+    <ul class="obList">
+      <li><b>打开设置浮窗</b>：更换字体、调整大小、选择背景、更改日期样式</li>
+      <li><b>鼠标移到左上角或右上角</b>：显示待办常驻页面</li>
+      <li><b>鼠标靠近页面底部</b>：浮现"全屏显示"按钮，一键沉浸式专注</li>
+      <li><b>所有设置自动保存</b>，下次打开仍在</li>
+    </ul>
+    <div class="obFoot">
+      <button class="obBtn" id="obClose">我知道了</button>
     </div>
   </div>
 </div>
@@ -419,8 +465,15 @@ function resolveBg(bgId){
   for(var j=0;j<DEFAULT_BGS.length;j++){if(DEFAULT_BGS[j].id===bgId)return DEFAULT_BGS[j].url;}
   return DEFAULT_BGS[0].url;
 }
+var _appliedBg=null;
 function applyBg(){
   var url=resolveBg(state.settings.bg);
+  if(url===_appliedBg){
+    var d2=Math.min(1, Math.max(.15, state.settings.dim||.62));
+    $('#vignette').style.opacity=d2;
+    return;
+  }
+  _appliedBg=url;
   if(url==='black'){
     elBg.style.backgroundImage='none';
     elBg.style.backgroundColor='#0a0c10';
@@ -767,15 +820,50 @@ document.addEventListener('mousemove',armHide);
 document.addEventListener('mousedown',armHide);
 document.addEventListener('mouseenter',armHide);
 
+/* ===== 新手引导 ===== */
+var OBKEY='studySimOnboardSeen';
+var onboardEl=$('#onboard');
+function showOnboard(){if(onboardEl)onboardEl.classList.add('show');}
+function hideOnboard(){if(onboardEl)onboardEl.classList.remove('show');}
+function closeOnboard(){
+  hideOnboard();
+  // 统一逻辑：关闭即记忆"已看过"，下次不再自动弹出（设置里的"引导"按钮仍可随时打开）
+  try{localStorage.setItem(OBKEY,'1');}catch(e){}
+}
+function setupOnboard(){
+  var seen=false;
+  try{seen=localStorage.getItem(OBKEY)==='1';}catch(e){}
+  var closeBtn=$('#obClose'), reopenBtn=$('#obReopen');
+  if(closeBtn)closeBtn.addEventListener('click',function(){closeOnboard();});
+  if(reopenBtn)reopenBtn.addEventListener('click',function(){
+    showOnboard();
+  });
+  if(onboardEl)onboardEl.addEventListener('click',function(e){
+    // 点击引导层时：若落在时钟区域内，直接穿透——关引导+开设置，避免要点两次
+    if(e.target===onboardEl || e.target===onboardEl.querySelector('#onboardBox')){
+      var ck=document.querySelector('#clock');
+      if(ck){
+        var r=ck.getBoundingClientRect();
+        if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
+          closeOnboard(); openSettings(); return;
+        }
+      }
+      closeOnboard();
+    }
+  });
+  if(!seen)setTimeout(showOnboard,400);
+}
+
 /* 开始 */
 function init(){
   applyBg(); applyFont(); setupSize(); buildBgGrid(); buildFonts();
   $('#swSec').checked=!!state.settings.showSec;
   $('#swDate').checked=!!state.settings.showDate;
   document.querySelectorAll('#secStyleOpts .posOpt').forEach(function(b){b.classList.toggle('active',b.dataset.sec===state.settings.secStyle);});
-  applySecStyle(); renderRemind('L'); renderRemind('R'); applyDate(); renderTodos();
+  applySecStyle(); applyFlip(); renderRemind('L'); renderRemind('R'); applyDate(); renderTodos();
   setInterval(tick,1000); tick();
   armHide();
+  setupOnboard();
 }
 init();
 })();
