@@ -1329,26 +1329,40 @@ input, textarea {
   .srPath { display: none; }
 }
 
-/* 秒数选项与预览：关闭秒针时整块收起（高度过渡，不占位） */
+/* 秒数选项与预览：左侧一列两档按钮，右侧预览；关闭秒针时整块收起 */
 .secBody {
   overflow: hidden; max-height: 220px; margin-top: 12px;
+  display: flex; align-items: stretch; gap: 10px;
   transition: max-height .26s ease, opacity .18s ease, margin-top .26s ease;
 }
 .secBody.collapsed { max-height: 0; margin-top: 0; opacity: 0; pointer-events: none; }
-.secBody .posOpts { margin: 0; }
+.secBody .posOpts {
+  flex: 0 0 118px; min-width: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.secBody .posOpt {
+  flex: 1 1 0; min-height: 44px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+}
 
 /* 秒数样式实时预览（设置面板会遮住主时钟，靠这里即时看到差异） */
 .secPreview {
-  display: flex; align-items: flex-end; justify-content: center;
-  margin-top: 10px; padding: 12px 0 10px; border-radius: 10px;
+  flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 10px; border-radius: 10px;
   background: rgba(0, 0, 0, .28); border: 1px solid var(--white-08);
   font-family: var(--font-clock); font-weight: 700; line-height: 1;
-  font-size: 30px; color: #fff; letter-spacing: .02em;
+  font-size: 40px; color: #fff; letter-spacing: .02em;
   font-variant-numeric: tabular-nums; overflow: hidden;
 }
-.secPreview .pvSec {
-  font-size: .42em; opacity: .72; align-self: flex-end;
-  margin: 0 0 0 .12em; display: inline-flex; align-items: center;
+/* 基线与大数字对齐：秒号自然坐在右下方 */
+.pvInner { display: flex; align-items: baseline; line-height: 1; }
+.secPreview .pvMain { line-height: 1; }
+.secPreview .pvSec { font-size: .42em; opacity: .72; margin: 0 0 0 .12em; }
+.secPreview.eq .pvSec { font-size: 1em; opacity: 1; margin: 0 0 0 .05em; }
+@media (max-width: 560px) {
+  .secBody { gap: 8px; }
+  .secBody .posOpts { flex-basis: 96px; }
+  .secPreview { font-size: 30px; padding: 10px 8px; }
 }
-.secPreview.eq .pvSec { font-size: 1em; opacity: 1; align-self: center; margin: 0 .05em; }
 

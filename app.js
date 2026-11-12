@@ -628,7 +628,7 @@
     timerControls.style.display = (m === 'pomodoro' || m === 'stopwatch') ? 'flex' : 'none';
     timerSkipBtn.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
     renderCountdownLine();
-    // 秒区显隐与「紧凑 / 等大」必须一起应用：只同步暗段而不更新 class，
+    // 秒区显隐与「缩小 / 等大」必须一起应用：只同步暗段而不更新 class，
     // 会让切换按钮看起来无效（要等下次打开设置刷新时才生效）
     applySecStyle();
     if (m === 'pomodoro') updatePomoBadge();
@@ -892,10 +892,10 @@
     const segment = isSegmentFont();
     const showSec = state.settings.showSec !== false;
     elTime.classList.toggle('segment', segment);
-    // 紧凑 / 等大完全由用户选择决定（数码管也遵循，暗段同比缩放仍对齐）
+    // 缩小 / 等大完全由用户选择决定（数码管也遵循，暗段同比缩放仍对齐）
     elTime.classList.toggle('sec-eq', state.settings.secStyle === 'equal');
 
-    // 开关与选项联动：关闭时把「紧凑/等大 + 预览」整块收起
+    // 开关与选项联动：关闭时把「缩小/等大 + 预览」整块收起
     const sw = $('#swSec');
     if (sw && sw.checked !== showSec) sw.checked = showSec;
     const body = $('#secBody');
@@ -910,7 +910,7 @@
     syncGhostSeconds();
   }
 
-  /* 秒数样式三选一：紧凑 / 等大 / 关闭 */
+  /* 秒数样式开关 + 两档：缩小 / 等大 */
   function syncSecStyleButtons() {
     // 关闭秒针时保留上次选择，重新打开还是原来那档
     const opt = state.settings.secStyle === 'equal' ? 'equal' : 'compact';

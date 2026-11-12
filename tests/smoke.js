@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.4.4', () => assert.strictEqual(U.VERSION, '1.4.4'));
+check('版本号为 1.4.5', () => assert.strictEqual(U.VERSION, '1.4.5'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -137,10 +137,14 @@ check('秒数样式：开关 + 两档 + 实时预览，关闭即收起', () => {
   assert.ok(html.includes('id="secPreview"'), '缺少秒样式预览');
   assert.ok(app.includes("$('#secPreview')"), '预览未与秒样式联动');
   assert.ok(app.includes('syncSecStyleButtons();'), '初始未同步按钮选中态');
-  // 关闭秒针时只有「紧凑 / 等大」两档，且没有第三个「关闭」按钮
+  // 关闭秒针时只有「缩小 / 等大」两档，且没有第三个「关闭」按钮
   const opts = html.match(/<div class="posOpts" id="secStyleOpts">[\s\S]*?<\/div>/);
   assert.ok(opts, '未找到秒数选项容器');
   assert.strictEqual((opts[0].match(/class="posOpt"/g) || []).length, 2, '秒数选项不是两档');
+  assert.ok(html.includes('>缩小</button>') && !html.includes('>紧凑</button>'), '档位文案未改为「缩小」');
+  assert.ok(html.includes('class="pvInner"') || html.includes("class='pvInner'"), '预览缺少基线对齐内层');
+  // 左列两档 + 右侧预览：容器横向 flex，选项列纵向
+  assert.ok(/\.secBody \{[\s\S]*?display: flex/.test(css) && /\.secBody \.posOpts \{[\s\S]*?flex-direction: column/.test(css), '秒数区域未排成左列按钮 + 右侧预览');
   // 收起由 applySecStyle 统一驱动（开关、模式切换都走这里）
   const body = app.slice(app.indexOf('function applySecStyle'), app.indexOf('function syncSecStyleButtons'));
   assert.ok(body.includes("classList.toggle('collapsed', !showSec)"), '关闭秒针未收起选项与预览');
