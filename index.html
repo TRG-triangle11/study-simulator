@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自习模拟器 v1.4.3</title>
+<title>自习模拟器 v1.4.4</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
-<link rel="stylesheet" href="style.css?v=1.4.3">
+<link rel="stylesheet" href="style.css?v=1.4.4">
 </head>
 <body>
 
@@ -73,7 +73,7 @@
     <div class="sHeader">
       <div class="sTitle">
         <h2>设置</h2>
-        <span class="ver">v1.4.3</span>
+        <span class="ver">v1.4.4</span>
       </div>
       <div class="sSearch">
         <svg class="sSearchIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -174,16 +174,19 @@
         <div class="sLabel">时钟样式选项</div>
         <div class="toggles">
           <div class="toggleRow">
-            <div><div class="tName">秒数样式</div><div class="tDesc">紧凑 / 等大 / 关闭（正计时始终带秒）</div></div>
+            <div><div class="tName">秒数样式</div><div class="tDesc">开启后可选择紧凑或等大，关闭则只显示时与分</div></div>
+            <label class="switch"><input type="checkbox" id="swSec" aria-label="显示秒数"><span class="slider"></span></label>
           </div>
-          <div class="posOpts" id="secStyleOpts">
-            <button class="posOpt" data-sec="compact">紧凑</button>
-            <button class="posOpt" data-sec="equal">等大</button>
-            <button class="posOpt" data-sec="off">关闭</button>
-          </div>
-          <!-- 实时预览：设置面板会盖住主时钟，靠这里即时看到差异 -->
-          <div class="secPreview" id="secPreview" aria-hidden="true">
-            <span class="pvMain">12:34</span><span class="pvSec">:56</span>
+          <!-- 关闭秒针时整块收起，只留上面的开关 -->
+          <div class="secBody" id="secBody">
+            <div class="posOpts" id="secStyleOpts">
+              <button class="posOpt" data-sec="compact">紧凑</button>
+              <button class="posOpt" data-sec="equal">等大</button>
+            </div>
+            <!-- 实时预览：设置面板会盖住主时钟，靠这里即时看到差异 -->
+            <div class="secPreview" id="secPreview" aria-hidden="true">
+              <span class="pvMain">12:34</span><span class="pvSec">:56</span>
+            </div>
           </div>
           <div class="toggleRow" style="margin-top:14px">
             <div><div class="tName">翻页时钟框</div><div class="tDesc">仿真透明翻页立体卡片小方框</div></div>
@@ -499,11 +502,11 @@
 <input type="file" id="fileInput" accept="image/*" aria-label="上传自定义壁纸">
 
 <!-- 核心脚本加载（util.js 必须最先加载） -->
-<script src="util.js?v=1.4.3"></script>
-<script src="db.js?v=1.4.3"></script>
-<script src="sound.js?v=1.4.3"></script>
-<script src="ambient.js?v=1.4.3"></script>
-<script src="particles.js?v=1.4.3"></script>
-<script src="app.js?v=1.4.3"></script>
+<script src="util.js?v=1.4.4"></script>
+<script src="db.js?v=1.4.4"></script>
+<script src="sound.js?v=1.4.4"></script>
+<script src="ambient.js?v=1.4.4"></script>
+<script src="particles.js?v=1.4.4"></script>
+<script src="app.js?v=1.4.4"></script>
 </body>
 </html>

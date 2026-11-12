@@ -1312,15 +1312,13 @@ input, textarea {
 .srPath { flex: 0 0 auto; font-size: 11px; color: var(--white-40); white-space: nowrap; }
 .srEmpty { padding: 26px 8px; text-align: center; font-size: 12px; color: var(--white-50); }
 
-/* 点击结果后目标位置闪三下浅绿方框，提醒「就在这里」 */
+/* 点击结果后目标位置闪三下浅绿方框，提醒「就在这里」
+   用 inset 描边：外描边会越出 .sBody 的裁剪边界，左侧那 2px 会整条消失 */
 .searchHit { animation: searchPulse 1.6s ease both; border-radius: 10px; }
 @keyframes searchPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
-  10% { box-shadow: 0 0 0 2px var(--color-accent); }
-  32% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0); }
-  54% { box-shadow: 0 0 0 2px var(--color-accent); }
-  76% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0); }
-  92% { box-shadow: 0 0 0 2px var(--color-accent); }
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(76, 175, 125, 0); background-color: rgba(76, 175, 125, 0); }
+  10%, 54%, 92% { box-shadow: inset 0 0 0 2px var(--color-accent); background-color: rgba(76, 175, 125, .07); }
+  32%, 76% { box-shadow: inset 0 0 0 2px rgba(76, 175, 125, 0); background-color: rgba(76, 175, 125, 0); }
 }
 @media (max-width: 560px) {
   .sHeader { gap: 9px; }
@@ -1330,6 +1328,14 @@ input, textarea {
   .sLink { padding: 0 11px; font-size: 13px; }
   .srPath { display: none; }
 }
+
+/* 秒数选项与预览：关闭秒针时整块收起（高度过渡，不占位） */
+.secBody {
+  overflow: hidden; max-height: 220px; margin-top: 12px;
+  transition: max-height .26s ease, opacity .18s ease, margin-top .26s ease;
+}
+.secBody.collapsed { max-height: 0; margin-top: 0; opacity: 0; pointer-events: none; }
+.secBody .posOpts { margin: 0; }
 
 /* 秒数样式实时预览（设置面板会遮住主时钟，靠这里即时看到差异） */
 .secPreview {
@@ -1345,5 +1351,4 @@ input, textarea {
   margin: 0 0 0 .12em; display: inline-flex; align-items: center;
 }
 .secPreview.eq .pvSec { font-size: 1em; opacity: 1; align-self: center; margin: 0 .05em; }
-.secPreview.off .pvSec { display: none; }
 

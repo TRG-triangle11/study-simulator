@@ -890,14 +890,21 @@
   }
   function applySecStyle() {
     const segment = isSegmentFont();
+    const showSec = state.settings.showSec !== false;
     elTime.classList.toggle('segment', segment);
     // 紧凑 / 等大完全由用户选择决定（数码管也遵循，暗段同比缩放仍对齐）
     elTime.classList.toggle('sec-eq', state.settings.secStyle === 'equal');
+
+    // 开关与选项联动：关闭时把「紧凑/等大 + 预览」整块收起
+    const sw = $('#swSec');
+    if (sw && sw.checked !== showSec) sw.checked = showSec;
+    const body = $('#secBody');
+    if (body) body.classList.toggle('collapsed', !showSec);
+
     // 设置面板会盖住主时钟，同步一份缩略预览，点完立刻能看到差异
     const pv = $('#secPreview');
     if (pv) {
       pv.classList.toggle('eq', state.settings.secStyle === 'equal');
-      pv.classList.toggle('off', state.settings.showSec === false);
       if (elTime.style.fontFamily) pv.style.fontFamily = elTime.style.fontFamily;
     }
     syncGhostSeconds();
@@ -905,7 +912,8 @@
 
   /* 秒数样式三选一：紧凑 / 等大 / 关闭 */
   function syncSecStyleButtons() {
-    const opt = state.settings.showSec === false ? 'off' : (state.settings.secStyle || 'compact');
+    // 关闭秒针时保留上次选择，重新打开还是原来那档
+    const opt = state.settings.secStyle === 'equal' ? 'equal' : 'compact';
     document.querySelectorAll('#secStyleOpts .posOpt').forEach((b) => {
       b.classList.toggle('active', b.dataset.sec === opt);
     });
@@ -1757,17 +1765,19 @@
 
     document.querySelectorAll('#secStyleOpts .posOpt').forEach((b) => {
       b.addEventListener('click', function () {
-        const v = this.dataset.sec;
-        if (v === 'off') {
-          state.settings.showSec = false;
-        } else {
-          state.settings.showSec = true;
-          state.settings.secStyle = v;
-        }
+        state.settings.secStyle = this.dataset.sec === 'equal' ? 'equal' : 'compact';
+        state.settings.showSec = true; // 选了样式就等于要显示秒
         saveSettings();
         syncSecStyleButtons();
         updateVisibility();
       });
+    });
+
+    const swSec = $('#swSec');
+    if (swSec) swSec.addEventListener('change', function () {
+      state.settings.showSec = this.checked;
+      saveSettings();
+      updateVisibility();
     });
 
     fontEntry.addEventListener('click', openFontDetail);

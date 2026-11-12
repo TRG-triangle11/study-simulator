@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.4.3', () => assert.strictEqual(U.VERSION, '1.4.3'));
+check('版本号为 1.4.4', () => assert.strictEqual(U.VERSION, '1.4.4'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -130,12 +130,21 @@ check('静态资源带版本参数，避免改完仍用旧缓存', () => {
   const scripts = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1]);
   assert.ok(scripts.length >= 6 && scripts.every((s) => /\?v=/.test(s)), '存在未带版本参数的脚本');
 });
-check('秒数样式带实时预览', () => {
+check('秒数样式：开关 + 两档 + 实时预览，关闭即收起', () => {
   const html = read('index.html');
   const app = read('app.js');
+  const css = read('style.css');
   assert.ok(html.includes('id="secPreview"'), '缺少秒样式预览');
   assert.ok(app.includes("$('#secPreview')"), '预览未与秒样式联动');
   assert.ok(app.includes('syncSecStyleButtons();'), '初始未同步按钮选中态');
+  // 关闭秒针时只有「紧凑 / 等大」两档，且没有第三个「关闭」按钮
+  const opts = html.match(/<div class="posOpts" id="secStyleOpts">[\s\S]*?<\/div>/);
+  assert.ok(opts, '未找到秒数选项容器');
+  assert.strictEqual((opts[0].match(/class="posOpt"/g) || []).length, 2, '秒数选项不是两档');
+  // 收起由 applySecStyle 统一驱动（开关、模式切换都走这里）
+  const body = app.slice(app.indexOf('function applySecStyle'), app.indexOf('function syncSecStyleButtons'));
+  assert.ok(body.includes("classList.toggle('collapsed', !showSec)"), '关闭秒针未收起选项与预览');
+  assert.ok(css.includes('.secBody.collapsed') && /max-height:\s*0/.test(css), '缺少收起时的折叠样式');
 });
 
 check('设置搜索框存在且可跨分类跳转', () => {
@@ -196,8 +205,10 @@ check('v1.4.0 新增：名句库 / 关闭秒针 / 壁纸浮窗 / 分组折叠', 
     .map((l) => l.trim().replace(/^"/, '').replace(/",?$/, ''));
   assert.ok(items.length >= 100, '名句不足 100 条，当前 ' + items.length);
   assert.ok(items.every((m) => m.length <= 40), '存在过长名句');
-  assert.ok(html.includes('data-sec="off"'), '缺少关闭秒针选项');
-  assert.ok(app.includes("v === 'off'"), '关闭秒针逻辑缺失');
+  assert.ok(html.includes('id="swSec"'), '缺少秒数开关');
+  assert.ok(!html.includes('data-sec="off"'), '仍是三选一，未改为开关 + 两档');
+  assert.ok(html.includes('id="secBody"'), '缺少可收起的秒数选项容器');
+  assert.ok(app.includes('state.settings.showSec = this.checked'), '开关未与显示秒数联动');
   assert.ok(html.includes('id="bgEntry"') && html.includes('id="bgDetail"'), '壁纸未改为入口 + 浮窗');
   assert.ok(app.includes('initGroupCollapse'), '缺少分组折叠逻辑');
   assert.ok(!html.includes('（自动补天数）') && !html.includes('（支持上下键调节或点击日历）'), '括号备注未删除');
