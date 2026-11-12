@@ -276,9 +276,10 @@ body {
 #settingsBox.dim { opacity: .35 }
 .sHeader {
   flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
 }
-.sHeader h2 { font-size: 20px; font-weight: 600; letter-spacing: .1em }
+.sTitle { flex: 0 0 auto; display: flex; flex-direction: column; gap: 3px; }
+.sHeader h2 { font-size: 20px; font-weight: 600; letter-spacing: .1em; line-height: 1.15; }
 .sClose {
   width: 34px; height: 34px; border: none; border-radius: 9px;
   background: var(--white-08); color: #fff; font-size: 17px;
@@ -1105,9 +1106,11 @@ input, textarea {
 /* v1.3.3：倒数日模式已移除，时钟在所有模式下常驻 */
 
 /* 新增控件 */
+/* 版本号：紧贴「设置」二字下方的一行小字 */
 .ver {
-  display: inline-block; margin-left: 8px; vertical-align: middle;
-  font-size: 11px; font-weight: 400; letter-spacing: .06em; color: var(--white-42);
+  display: block; margin: 0;
+  font-size: 10.5px; font-weight: 400; letter-spacing: .12em;
+  line-height: 1.1; color: var(--white-42);
 }
 .dbHint { color: #ffca7a !important; line-height: 1.55; margin-top: 8px; }
 .ambMasterVolRow {
@@ -1220,16 +1223,24 @@ input, textarea {
   #bgDetailBox .bgGrid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* ===== v1.4.2：设置搜索 ===== */
+/* ===== 设置搜索（v1.4.3：搜索框移入标题行，结果改为覆盖层） ===== */
 .sSearch {
-  position: relative; display: flex; align-items: center; gap: 8px;
-  height: 38px; margin: 0 0 10px; padding: 0 12px; flex-shrink: 0;
+  position: relative; display: flex; align-items: center; gap: 9px;
+  flex: 1 1 auto; min-width: 0; height: 36px; margin: 0;
+  padding: 0 10px 0 12px;
   border: 1px solid var(--panel-border); border-radius: 10px;
   background: rgba(255,255,255,.04);
   transition: border-color .2s ease, background .2s ease;
 }
-.sSearch:focus-within { border-color: var(--color-accent); background: rgba(255,255,255,.06); }
-.sSearchIcon { font-size: 15px; color: var(--white-40); line-height: 1; }
+.sSearch:focus-within { border-color: var(--color-accent); background: rgba(255,255,255,.07); }
+/* 图标用内联 SVG：矢量放大不失真，block + flex 居中避免字形基线造成的偏移 */
+.sSearchIcon {
+  flex: 0 0 auto; display: block; width: 17px; height: 17px;
+  color: var(--white-45); fill: none; stroke: currentColor;
+  stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+  transition: color .2s ease;
+}
+.sSearch:focus-within .sSearchIcon { color: var(--white-80); }
 .sSearch input {
   flex: 1; min-width: 0; height: 100%; padding: 0; margin: 0;
   border: none; outline: none; background: transparent; -webkit-appearance: none; appearance: none;
@@ -1238,35 +1249,85 @@ input, textarea {
 .sSearch input::placeholder { color: var(--white-40); }
 .sSearch input::-webkit-search-cancel-button { display: none; }
 .sSearchClear {
-  flex: 0 0 auto; width: 20px; height: 20px; padding: 0;
+  flex: 0 0 auto; width: 19px; height: 19px; padding: 0;
   display: none; align-items: center; justify-content: center;
   border: none; border-radius: 50%; cursor: pointer;
-  background: var(--white-12); color: var(--white-80); font-size: 11px; line-height: 1;
+  background: var(--white-12); color: var(--white-80); font-size: 10px; line-height: 1;
 }
 .sSearchClear:hover { background: var(--white-22); color: #fff; }
 
-.sSearchResults { display: none; flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; scrollbar-width: none; }
-.sSearchResults::-webkit-scrollbar { width: 0; height: 0; }
-#settingsBox.searching .sSearchResults { display: block; }
-#settingsBox.searching .sBody { display: none; }
+/* 内容区容器：搜索结果为它的绝对定位覆盖层，底下的设置不参与重排 */
+.sMain { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.sContent { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 
+/* 结果列表：贴在搜索框下方的浮层，高度随内容增长（最多占满内容区），
+   底下的设置保持原位不动，滚动也不受影响 */
+.sSearchResults {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 6;
+  display: none; flex-direction: column; gap: 1px;
+  max-height: 100%;
+  padding: 6px 6px 8px; overflow-y: auto; overscroll-behavior: contain;
+  border: 1px solid var(--panel-border); border-radius: 12px;
+  background: rgba(19, 19, 22, .97);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, .46);
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.18) transparent;
+}
+.sSearchResults::-webkit-scrollbar { width: 5px; }
+.sSearchResults::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 4px; }
+#settingsBox.searching .sSearchResults { display: flex; }
+/* 结果展开时把下面的设置轻微压暗（不隐藏、不重排），层次更清楚 */
+#settingsBox .sBody { transition: opacity .18s ease; }
+#settingsBox.searching .sBody { opacity: .34; pointer-events: none; }
+
+/* 每行：小图标 + 名称 + 所在位置，参照 Windows 设置的搜索结果 */
 .srItem {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 11px 12px; margin-bottom: 2px; border-radius: 10px;
-  border: 1px solid transparent; cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
+  position: relative; display: flex; align-items: center; gap: 11px;
+  width: 100%; padding: 9px 12px 9px 14px; border: none; border-radius: 8px;
+  background: transparent; color: inherit; font-family: inherit;
+  text-align: left; cursor: pointer;
+  transition: background .14s ease;
 }
-.srItem:hover, .srItem:focus-visible { background: var(--white-08); border-color: var(--panel-border); outline: none; }
-.srName { font-size: 13px; color: var(--white-90); }
-.srPath { font-size: 11px; color: var(--white-45); white-space: nowrap; }
-.srEmpty { padding: 22px 4px; text-align: center; font-size: 12px; color: var(--white-50); }
-.searchHit { animation: searchPulse 1.8s ease; }
+.srItem:hover, .srItem.active { background: var(--white-08); }
+.srItem.active::before {
+  content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 17px; border-radius: 2px; background: var(--color-accent);
+}
+.srItem:focus-visible { outline: none; background: var(--white-08); box-shadow: 0 0 0 1px var(--color-accent); }
+.srIcon {
+  flex: 0 0 auto; width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--white-55);
+}
+.srIcon svg {
+  width: 16px; height: 16px; display: block;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.srItem.active .srIcon, .srItem:hover .srIcon { color: var(--white-85); }
+.srName {
+  flex: 1 1 auto; min-width: 0; font-size: 13.5px; color: var(--white-90);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.srPath { flex: 0 0 auto; font-size: 11px; color: var(--white-40); white-space: nowrap; }
+.srEmpty { padding: 26px 8px; text-align: center; font-size: 12px; color: var(--white-50); }
+
+/* 点击结果后目标位置闪三下浅绿方框，提醒「就在这里」 */
+.searchHit { animation: searchPulse 1.6s ease both; border-radius: 10px; }
 @keyframes searchPulse {
-  0%, 100% { box-shadow: none; }
-  18%, 62% { box-shadow: 0 0 0 2px var(--color-accent-glow); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+  10% { box-shadow: 0 0 0 2px var(--color-accent); }
+  32% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0); }
+  54% { box-shadow: 0 0 0 2px var(--color-accent); }
+  76% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0); }
+  92% { box-shadow: 0 0 0 2px var(--color-accent); }
 }
-@media (max-width: 520px) {
-  .sSearch { height: 36px; }
+@media (max-width: 560px) {
+  .sHeader { gap: 9px; }
+  .sHeader h2 { font-size: 18px; }
+  .sSearch { height: 34px; padding: 0 8px 0 10px; gap: 7px; }
+  .sSearchIcon { width: 15px; height: 15px; }
+  .sLink { padding: 0 11px; font-size: 13px; }
   .srPath { display: none; }
 }
 

@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.4.2', () => assert.strictEqual(U.VERSION, '1.4.2'));
+check('版本号为 1.4.3', () => assert.strictEqual(U.VERSION, '1.4.3'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -147,6 +147,35 @@ check('设置搜索框存在且可跨分类跳转', () => {
   assert.ok(app.includes("querySelectorAll('.sTabPane')"), '未跨分类收集设置项');
   assert.ok(app.includes('scrollIntoView'), '搜索结果未定位到目标');
   assert.ok(app.includes('function resetSettingsSearch'), '关闭设置未重置搜索');
+});
+
+check('v1.4.3：设置头部搜索 + 结果覆盖层 + 拼音搜索', () => {
+  const html = read('index.html');
+  const app = read('app.js');
+  const css = read('style.css');
+  // 标题简化为「设置」，版本号在其下方
+  assert.ok(/<div class="sTitle">\s*<h2>设置<\/h2>\s*<span class="ver">/.test(html), '标题未改为「设置 + 下方版本号」');
+  // 搜索框位于头部（在 Tab 之前），结果层在内容容器内
+  const head = html.indexOf('class="sHeader"');
+  const search = html.indexOf('class="sSearch"');
+  const tabs = html.indexOf('class="sTabs"');
+  assert.ok(head > -1 && search > head && search < tabs, '搜索框未移入标题行');
+  assert.ok(html.includes('class="sMain"'), '缺少内容容器 sMain');
+  assert.ok(html.indexOf('id="sSearchResults"') > html.indexOf('id="sBody"'), '结果层未覆盖在内容区');
+  // 图标改为矢量 SVG，避免字形基线偏移
+  assert.ok(/<svg class="sSearchIcon"/.test(html), '搜索图标不是 SVG');
+  assert.ok(css.includes('.sSearchResults {\n  position: absolute'), '结果层未绝对定位覆盖');
+  // 搜索时内容区只压暗、不隐藏（否则底下的设置会消失，失去位置感）
+  assert.ok(!/#settingsBox\.searching \.sBody \{[^}]*display:\s*none/.test(css), '搜索时仍在隐藏内容区');
+  assert.ok(/#settingsBox\.searching \.sBody \{[^}]*opacity/.test(css), '搜索时未压暗内容区');
+  // 拼音匹配
+  assert.ok(app.includes('scoreOf') && app.includes('isSubseq'), '缺少拼音 / 模糊打分');
+  assert.strictEqual(U.toPinyin('字体'), 'ziti');
+  assert.strictEqual(U.toPinyinInitials('时间字体'), 'sjzt');
+  assert.strictEqual(U.toPinyin('背景壁纸').includes('bizhi'), true);
+  assert.strictEqual(U.toPinyin('番茄钟'), 'fanqiezhong');
+  // 搜索时打字不改变当前分类，点击后才跳转
+  assert.ok(app.includes("results.addEventListener('click'"), '缺少点击空白关闭结果层');
 });
 
 check('秒数样式切换立即生效（v1.4.1 回归）', () => {

@@ -956,7 +956,7 @@
     const input = $('#settingsSearch');
     const results = $('#sSearchResults');
     const clearBtn = $('#settingsSearchClear');
-    if (input) input.value = '';
+    if (input) { input.value = ''; input.setAttribute('aria-expanded', 'false'); }
     if (results) results.innerHTML = '';
     if (clearBtn) clearBtn.style.display = 'none';
     if (settingsBox) settingsBox.classList.remove('searching');
@@ -975,6 +975,11 @@
       return btn ? btn.textContent.replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '').trim() : '';
     };
 
+    /* 去掉折叠小三角与多余空白，结果行只显示干净的设置项名 */
+    const clean = (t) => String(t || '')
+      .replace(/[\u25BE\u25B8\u25B6\u25BC\u25B2\u25C0\uFE0E\uFE0F]/g, '')
+      .replace(/\s+/g, ' ').trim();
+
     function collect() {
       const items = [];
       document.querySelectorAll('.sTabPane').forEach((pane) => {
@@ -986,9 +991,9 @@
           const descEl = row.querySelector('.tDesc');
           const group = row.closest('.sGroup');
           const gLabel = group ? group.querySelector(':scope > .sLabel') : null;
-          const gText = gLabel ? gLabel.textContent.replace(/\s+/g, ' ').trim() : '';
+          const gText = gLabel ? clean(gLabel.textContent) : '';
           items.push({
-            name: nameEl.textContent.trim(),
+            name: clean(nameEl.textContent),
             text: [nameEl.textContent, descEl ? descEl.textContent : '', gText, tabTitle].join(' '),
             path: tabTitle + (gText ? ' · ' + gText : ''),
             tab: tab, el: row
@@ -1005,19 +1010,58 @@
           const curText = curEl ? curEl.textContent.replace(/\s+/g, ' ').trim() : '';
           const parent = g.parentElement ? g.parentElement.closest('.sGroup') : null;
           const pLabel = parent && parent !== g ? parent.querySelector(':scope > .sLabel') : null;
-          const pText = pLabel ? pLabel.textContent.replace(/\s+/g, ' ').trim() : '';
+          const pText = pLabel ? clean(pLabel.textContent) : '';
           items.push({
-            name: label.textContent.replace(/\s+/g, ' ').trim(),
+            name: clean(label.textContent),
             text: [label.textContent, pText, curText, tabTitle].join(' '),
             path: tabTitle + (pText ? ' · ' + pText : ''),
             tab: tab, el: g
           });
         });
       });
+      // 预处理：小写文本 + 拼音全拼 + 拼音首字母，供中文 / 拼音 / 首字母 / 模糊匹配
+      // 名称单独再算一份：模糊（跳字）只对名称生效，否则长描述里的个别字母会凑出误命中
+      items.forEach((it) => {
+        it.nameLower = (it.name || '').toLowerCase();
+        it.textLower = (it.text || '').toLowerCase();
+        it.py = U.toPinyin(it.text || '');
+        it.pyi = U.toPinyinInitials(it.text || '');
+        it.pyName = U.toPinyin(it.name || '');
+        it.pyiName = U.toPinyinInitials(it.name || '');
+      });
       return items;
     }
 
     function clearSearch() { resetSettingsSearch(); }
+
+    /* 关键词归一：小写、去空格（「zi ti」「zi 体」都能命中 ziti） */
+    function norm(s) { return String(s == null ? '' : s).toLowerCase().replace(/[\s\u3000]+/g, ''); }
+
+    /* 顺序包含（允许跳字）：「sjzt」可命中 shijianziti */
+    function isSubseq(q, t) {
+      if (!t) return false;
+      let i = 0;
+      for (let k = 0; k < t.length && i < q.length; k++) {
+        if (t.charAt(k) === q.charAt(i)) i++;
+      }
+      return i === q.length;
+    }
+
+    /* 打分：数字越小越靠前，-1 表示不匹配
+     * 名称优先于说明，整词包含优先于跳字模糊；跳字只在名称的拼音内做，避免长描述凑字母。 */
+    function scoreOf(it, q) {
+      if (!q) return -1;
+      if (it.nameLower.startsWith(q)) return 0;
+      if (it.nameLower.includes(q)) return 1;
+      if (it.pyName.startsWith(q) || it.pyiName.startsWith(q)) return 2;
+      if (it.pyiName.includes(q)) return 3;
+      if (it.pyName.includes(q)) return 4;
+      if (it.textLower.includes(q)) return 5;
+      if (it.py.includes(q) || it.pyi.includes(q)) return 6;
+      if (q.length >= 3 && isSubseq(q, it.pyiName)) return 7;
+      if (q.length >= 3 && isSubseq(q, it.pyName)) return 8;
+      return -1;
+    }
 
     function go(item) {
       clearSearch();
@@ -1037,18 +1081,52 @@
         if (typeof item.el.scrollIntoView === 'function') {
           item.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }
+        // 先移除再强制回流，连续搜索同一个词也能重新闪
+        item.el.classList.remove('searchHit');
+        void item.el.offsetWidth;
         item.el.classList.add('searchHit');
-        setTimeout(() => item.el.classList.remove('searchHit'), 1800);
-      }, 80);
+        setTimeout(() => item.el.classList.remove('searchHit'), 1700);
+      }, 90);
+    }
+
+    /* 结果行左侧分类图标：单色线性 SVG，与面板整体风格一致（emoji 在小于 16px 时会糊） */
+    const ICON_ATTR = 'viewBox="0 0 24 24" aria-hidden="true" focusable="false"';
+    const TAB_ICONS = {
+      appearance: '<svg ' + ICON_ATTR + '><circle cx="12" cy="12" r="7.6"/><path d="M12 7.6V12l3 1.9"/></svg>',
+      focus: '<svg ' + ICON_ATTR + '><circle cx="12" cy="13.4" r="7"/><path d="M12 10v3.4l2.3 1.4M9.6 3h4.8M12 3v2.4"/></svg>',
+      'date-todo': '<svg ' + ICON_ATTR + '><rect x="3.6" y="5.2" width="16.8" height="15" rx="2.6"/><path d="M3.6 9.6h16.8M8.2 3.2v3.4M15.8 3.2v3.4"/></svg>',
+      stats: '<svg ' + ICON_ATTR + '><path d="M5.4 19.2V11M12 19.2V5M18.6 19.2v-5.4"/></svg>'
+    };
+    let hitItems = [];
+    let activeIdx = -1;
+
+    function setActive(idx) {
+      const rows = results.querySelectorAll('.srItem');
+      if (!rows.length) { activeIdx = -1; return; }
+      activeIdx = (idx + rows.length) % rows.length;
+      rows.forEach((r, i) => r.classList.toggle('active', i === activeIdx));
+      const cur = rows[activeIdx];
+      if (cur && typeof cur.scrollIntoView === 'function') {
+        cur.scrollIntoView({ block: 'nearest' });
+      }
     }
 
     function render(raw) {
-      const q = raw.trim().toLowerCase();
+      const q = norm(raw);
       if (!q) { clearSearch(); return; }
-      settingsBox.classList.add('searching');
-      if (clearBtn) clearBtn.style.display = 'flex';
-      const hits = collect().filter((it) => it.text.toLowerCase().includes(q));
       results.innerHTML = '';
+      hitItems = [];
+      activeIdx = -1;
+      const hits = [];
+      collect().forEach((it) => {
+        const s = scoreOf(it, q);
+        if (s >= 0) hits.push({ it: it, s: s });
+      });
+      hits.sort((a, b) => a.s - b.s);
+      // 结果浮在内容区之上，底下的设置保持原样不动
+      settingsBox.classList.add('searching');
+      input.setAttribute('aria-expanded', 'true');
+      if (clearBtn) clearBtn.style.display = 'flex';
       if (!hits.length) {
         const empty = document.createElement('div');
         empty.className = 'srEmpty';
@@ -1056,24 +1134,32 @@
         results.appendChild(empty);
         return;
       }
-      hits.slice(0, 30).forEach((it) => {
-        const row = document.createElement('div');
+      hits.slice(0, 40).forEach(({ it }) => {
+        hitItems.push(it);
+        const row = document.createElement('button');
+        row.type = 'button';
         row.className = 'srItem';
-        row.setAttribute('role', 'button');
-        row.setAttribute('tabindex', '0');
+        row.setAttribute('role', 'option');
+
+        const ic = document.createElement('span');
+        ic.className = 'srIcon';
+        ic.innerHTML = TAB_ICONS[it.tab] || TAB_ICONS.appearance;
+        ic.setAttribute('aria-hidden', 'true');
+
         const n = document.createElement('span');
         n.className = 'srName';
         n.textContent = it.name;
+
         const p = document.createElement('span');
         p.className = 'srPath';
         p.textContent = it.path;
-        row.appendChild(n); row.appendChild(p);
+
+        row.appendChild(ic); row.appendChild(n); row.appendChild(p);
         row.addEventListener('click', () => go(it));
-        row.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.code === 'Space') { e.preventDefault(); go(it); }
-        });
+        row.addEventListener('mouseenter', () => setActive(hitItems.indexOf(it)));
         results.appendChild(row);
       });
+      setActive(0);
     }
 
     input.addEventListener('input', () => render(input.value));
@@ -1082,11 +1168,29 @@
       if (e.key === 'Escape') {
         e.preventDefault(); e.stopPropagation();
         if (input.value) clearSearch(); else input.blur();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (hitItems.length) setActive(activeIdx + 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (hitItems.length) setActive(activeIdx - 1);
       } else if (e.key === 'Enter') {
-        const first = results.querySelector('.srItem');
-        if (first) first.click();
+        e.preventDefault();
+        const target = hitItems[activeIdx >= 0 ? activeIdx : 0];
+        if (target) go(target);
       }
     });
+    // 点空白处（搜索框与结果之外）关闭结果层
+    results.addEventListener('click', (e) => {
+      if (e.target === results) clearSearch();
+    });
+    document.addEventListener('mousedown', (e) => {
+      if (!settingsBox.classList.contains('searching')) return;
+      const t = e.target;
+      if (!t || typeof t.closest !== 'function') return;
+      if (t.closest('.sSearch') || t.closest('#sSearchResults')) return;
+      clearSearch();
+    }, true);
     if (clearBtn) clearBtn.addEventListener('click', clearSearch);
     document.querySelectorAll('.sTabBtn').forEach((b) => b.addEventListener('click', clearSearch));
   }
