@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.3.0', () => assert.strictEqual(U.VERSION, '1.3.0'));
+check('版本号为 1.3.1', () => assert.strictEqual(U.VERSION, '1.3.1'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -45,14 +45,11 @@ check('番茄钟剩余时间由绝对时间戳推导', () => {
   assert.strictEqual(U.pomodoroRemaining({ isRunning: true, endAt: now - 100 }, now), 0);
   assert.strictEqual(U.pomodoroRemaining({ isRunning: false, remaining: 42 }, now), 42);
 });
-check('正计时由墙钟差推导（不累加）', () => {
-  const now = 1700000000000;
-  assert.strictEqual(U.stopwatchElapsed({ baseElapsed: 10, startedAt: now - 3000, isRunning: true }, now), 13);
-  assert.strictEqual(U.stopwatchElapsed({ baseElapsed: 90, isRunning: false }, now), 90);
-});
-check('天/时/分 与 时/分/秒 拆分', () => {
-  assert.deepStrictEqual(U.splitDHM(86400 + 3600 + 60), { d: 1, h: 1, m: 1 });
-  assert.deepStrictEqual(U.splitHMS(3600 + 120 + 3), { h: 1, m: 2, s: 3 });
+check('目标倒数只按自然日计算', () => {
+  assert.strictEqual(U.daysUntil(U.localDateKey(U.addDays(new Date(), 287))), 287);
+  assert.strictEqual(U.daysUntil(U.localDateKey(new Date())), 0);
+  assert.strictEqual(U.daysUntil(U.localDateKey(U.addDays(new Date(), -5))), 0);
+  assert.strictEqual(U.daysUntil('bad'), 0);
 });
 check('时长格式化与 1.2 记录兼容', () => {
   assert.strictEqual(U.recordSeconds({ durationMinutes: 25 }), 1500);
@@ -79,6 +76,18 @@ check('index.html 脚本加载顺序正确（util 最先）', () => {
   const html = read('index.html');
   const order = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1]);
   assert.deepStrictEqual(order, ['util.js', 'db.js', 'sound.js', 'ambient.js', 'particles.js', 'app.js']);
+});
+check('模式栏去掉正计时与括号编号，倒数文字行存在', () => {
+  const html = read('index.html');
+  const bar = html.match(/<div id="modeBar"[\s\S]*?<\/div>/);
+  assert.ok(bar, '未找到模式栏');
+  assert.ok(!bar[0].includes('data-mode="stopwatch"'), '正计时按钮仍存在');
+  assert.ok(!/\(\d\)/.test(bar[0]), '按钮文案仍含括号数字');
+  assert.ok(bar[0].includes('>时钟</button>'));
+  assert.ok(bar[0].includes('>番茄钟</button>'));
+  assert.ok(bar[0].includes('>倒数日</button>'));
+  assert.ok(html.includes('id="countdownLine"'), '缺少倒数文字行');
+  assert.ok(!html.includes('id="targetTitle"'), '旧倒数标题元素未移除');
 });
 
 console.log('\n[3] 资源文件完整性');
@@ -155,7 +164,7 @@ function preset(sel, keys, prop) {
   });
 }
 function queryAll(sel) {
-  if (sel === '.modeBtn') return preset(sel, ['clock', 'pomodoro', 'stopwatch', 'target'], 'mode');
+  if (sel === '.modeBtn') return preset(sel, ['clock', 'pomodoro', 'target'], 'mode');
   if (sel === '.sTabBtn') return preset(sel, ['appearance', 'focus', 'date-todo', 'stats'], 'tab');
   if (sel === '.sTabPane') return preset(sel, [1, 2, 3, 4], 'x');
   if (sel === '#secStyleOpts .posOpt') return preset(sel, ['compact', 'equal'], 'sec');

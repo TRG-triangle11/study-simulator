@@ -144,7 +144,7 @@
     showYear: true, showMonthDay: true, showWeekday: true,
     todoSize: 14, todoOpacity: 0.6, showMotto: true,
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
-    targetTitle: '距离 目标日 还有', targetDate: getDefaultTargetDate(),
+    targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
     particleEffect: 'none', rainSpeed: 2, rainDensity: 2
   }, loadSettings());
 
@@ -162,36 +162,25 @@
 
   /* ===== 计时器持久化状态 ===== */
   function defaultTimers(workSec) {
-    return {
-      pomodoro: { status: 'work', remaining: workSec, endAt: 0, isRunning: false, rounds: 0, phaseTotal: workSec },
-      stopwatch: { baseElapsed: 0, startedAt: 0, isRunning: false, archivedSeconds: 0, autoPaused: false }
-    };
+    return { status: 'work', remaining: workSec, endAt: 0, isRunning: false, rounds: 0, phaseTotal: workSec };
   }
   function loadTimers() {
     const t = readJSON(TIMER_KEY, null);
     if (!t || typeof t !== 'object' || Array.isArray(t)) return null;
-    const p = t.pomodoro || {}, s = t.stopwatch || {};
+    // 兼容 v1.3.0 的 { pomodoro, stopwatch } 结构；正计时数据直接忽略
+    const p = t.pomodoro || t;
     const workSec = (initialSettings.pomoWorkMin || 25) * 60;
     return {
-      pomodoro: {
-        status: p.status === 'break' ? 'break' : 'work',
-        remaining: U.clamp(p.remaining, 0, 7200, workSec),
-        endAt: Number.isFinite(Number(p.endAt)) ? Number(p.endAt) : 0,
-        isRunning: !!p.isRunning,
-        rounds: U.clamp(p.rounds, 0, 9999, 0),
-        phaseTotal: U.clamp(p.phaseTotal, 1, 7200, workSec)
-      },
-      stopwatch: {
-        baseElapsed: U.clamp(s.baseElapsed, 0, 864000, 0),
-        startedAt: Number.isFinite(Number(s.startedAt)) ? Number(s.startedAt) : 0,
-        isRunning: !!s.isRunning,
-        archivedSeconds: U.clamp(s.archivedSeconds, 0, 864000, 0),
-        autoPaused: !!s.autoPaused
-      }
+      status: p.status === 'break' ? 'break' : 'work',
+      remaining: U.clamp(p.remaining, 0, 7200, workSec),
+      endAt: Number.isFinite(Number(p.endAt)) ? Number(p.endAt) : 0,
+      isRunning: !!p.isRunning,
+      rounds: U.clamp(p.rounds, 0, 9999, 0),
+      phaseTotal: U.clamp(p.phaseTotal, 1, 7200, workSec)
     };
   }
   function saveTimers() {
-    writeJSON(TIMER_KEY, { pomodoro: state.pomodoro, stopwatch: state.stopwatch });
+    writeJSON(TIMER_KEY, { pomodoro: state.pomodoro });
   }
 
   /* ===== 专注记录待写队列（保证刷新 / 关闭不丢数据） ===== */
@@ -223,8 +212,7 @@
     todos: loadTodos(),
     customBgs: [],
     dbAvailable: true,
-    pomodoro: persisted.pomodoro,
-    stopwatch: persisted.stopwatch,
+    pomodoro: persisted,
     mottoIndex: 0,
     zenMode: false
   };
@@ -243,7 +231,7 @@
         fsBtn = $('#fsBtn'), fileInput = $('#fileInput');
 
   const modeBar = $('#modeBar'), zenExitBtn = $('#zenExitBtn'),
-        timerBadge = $('#timerBadge'), targetTitle = $('#targetTitle'),
+        timerBadge = $('#timerBadge'), countdownLine = $('#countdownLine'),
         timerControls = $('#timerControls'), timerToggleBtn = $('#timerToggleBtn'),
         timerResetBtn = $('#timerResetBtn'), timerSkipBtn = $('#timerSkipBtn'),
         mottoWrap = $('#mottoWrap'), mottoText = $('#mottoText');
@@ -485,9 +473,7 @@
   /* ===== 字号（监听器只绑定一次） ===== */
   let sizeBound = false;
   function applyClockSize() {
-    const base = U.clamp(state.settings.size, 48, 200, 120);
-    const factor = state.settings.mode === 'target' ? 0.78 : 1; // 倒数日可能是 3 位天数
-    elTime.style.fontSize = Math.round(base * factor) + 'px';
+    elTime.style.fontSize = U.clamp(state.settings.size, 48, 200, 120) + 'px';
   }
   function syncSize() {
     const px = U.clamp(state.settings.size, 48, 200, 120);
@@ -519,24 +505,22 @@
   /* ===== 统一显隐 / 模式 ===== */
   function updateVisibility() {
     const m = state.settings.mode;
+    elClock.dataset.mode = m;
     elTime.dataset.mode = m;
     elDate.style.display = (state.settings.showDate && m === 'clock') ? '' : 'none';
-    // sec-wrap 在倒数日模式承载「分钟」，必须显示；其余模式尊重「显示秒数」
-    elSecWrap.style.display = (m === 'target' || state.settings.showSec) ? '' : 'none';
-    timerBadge.style.display = (m === 'pomodoro' || m === 'stopwatch') ? 'inline-flex' : 'none';
-    targetTitle.style.display = m === 'target' ? 'block' : 'none';
-    timerControls.style.display = (m === 'pomodoro' || m === 'stopwatch') ? 'flex' : 'none';
+    elSecWrap.style.display = state.settings.showSec ? '' : 'none';
+    timerBadge.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
+    timerControls.style.display = m === 'pomodoro' ? 'flex' : 'none';
     timerSkipBtn.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
-
+    // 倒数日是一行常驻文字；target 模式下大时钟由 CSS 隐藏，只放大这行字
+    renderCountdownLine();
     if (m === 'pomodoro') updatePomoBadge();
-    else if (m === 'stopwatch') { timerBadge.className = ''; timerBadge.textContent = '正向专注计时'; }
-    if (m === 'target') targetTitle.textContent = state.settings.targetTitle || '距离 目标 还有';
     updateTimerControls();
     applyClockSize();
   }
 
   function setMode(mode, silent) {
-    if (!['clock', 'pomodoro', 'stopwatch', 'target'].includes(mode)) mode = 'clock';
+    if (!['clock', 'pomodoro', 'target'].includes(mode)) mode = 'clock';
     state.settings.mode = mode;
     saveSettings();
     document.querySelectorAll('.modeBtn').forEach((btn) => {
@@ -551,8 +535,7 @@
     const m = state.settings.mode;
     if (m === 'clock') renderClockTime();
     else if (m === 'pomodoro') renderPomodoroTime();
-    else if (m === 'stopwatch') renderStopwatchTime();
-    else if (m === 'target') renderTargetCountdown();
+    // target：不渲染大时钟，只显示一行倒数文字
   }
 
   function renderClockTime() {
@@ -636,63 +619,17 @@
     switchPomodoroStage(true); // 跳过不归档、不计轮数
   }
 
-  /* ===== 正计时（绝对时间戳） ===== */
-  function currentStopwatchSeconds() { return U.stopwatchElapsed(state.stopwatch, Date.now()); }
-  function renderStopwatchTime() {
-    const t = U.splitHMS(currentStopwatchSeconds());
-    elTH.textContent = pad(t.h);
-    elTM.textContent = pad(t.m);
-    elTS.textContent = pad(t.s);
-  }
-  function toggleStopwatch() {
-    if (state.stopwatch.isRunning) pauseStopwatch(); else startStopwatch();
-    updateTimerControls();
-  }
-  function startStopwatch() {
-    const s = state.stopwatch;
-    if (s.isRunning) return;
-    s.startedAt = Date.now(); s.isRunning = true; s.autoPaused = false;
-    saveTimers();
-    if (window.StudySound && state.settings.soundEnabled) window.StudySound.playSoftTick();
-    updateTimerControls();
-  }
-  function pauseStopwatch() {
-    const s = state.stopwatch;
-    if (s.isRunning) s.baseElapsed = currentStopwatchSeconds();
-    s.isRunning = false; s.startedAt = 0;
-    saveTimers(); updateTimerControls();
-  }
-  function resetStopwatch() {
-    const s = state.stopwatch;
-    const total = currentStopwatchSeconds();
-    const delta = Math.max(0, total - (s.archivedSeconds || 0));
-    if (delta >= 60) recordFocus('stopwatch', delta);
-    s.isRunning = false; s.startedAt = 0; s.baseElapsed = 0;
-    s.archivedSeconds = 0; s.autoPaused = false;
-    saveTimers(); renderCurrentMode(); updateTimerControls();
-  }
-
-  /* ===== 目标倒数日（天 / 时 / 分） ===== */
-  function renderTargetCountdown() {
-    const dt = U.parseLocalDate(state.settings.targetDate);
-    const diff = dt ? Math.max(0, Math.floor((dt.getTime() - Date.now()) / 1000)) : 0;
-    const t = U.splitDHM(diff);
-    elTH.textContent = String(t.d);
-    elTM.textContent = pad(t.h);
-    elTS.textContent = pad(t.m); // v1.3：分钟不再被隐藏
+  /* ===== 目标倒数日：主界面一行文字，只按天计 ===== */
+  function renderCountdownLine() {
+    const days = U.daysUntil(state.settings.targetDate);
+    const title = (state.settings.targetTitle || '距离 目标 还有').trim();
+    countdownLine.textContent = `${title}${days}天`;
   }
 
   function updateTimerControls() {
-    const m = state.settings.mode;
-    if (m === 'pomodoro') {
-      timerToggleBtn.textContent = state.pomodoro.isRunning ? '⏸ 暂停' : '▶ 开始专注';
-      timerToggleBtn.classList.toggle('primary', !state.pomodoro.isRunning);
-    } else if (m === 'stopwatch') {
-      timerToggleBtn.textContent = state.stopwatch.isRunning
-        ? '⏸ 暂停'
-        : (state.stopwatch.autoPaused ? '▶ 继续计时' : '▶ 开始计时');
-      timerToggleBtn.classList.toggle('primary', !state.stopwatch.isRunning);
-    }
+    if (state.settings.mode !== 'pomodoro') return;
+    timerToggleBtn.textContent = state.pomodoro.isRunning ? '⏸ 暂停' : '▶ 开始专注';
+    timerToggleBtn.classList.toggle('primary', !state.pomodoro.isRunning);
   }
 
   /* ===== 单一心跳（对齐整秒，渲染只在这里发生） ===== */
@@ -708,14 +645,14 @@
       handlePomodoroStageEnd(false);
     }
     renderCurrentMode();
+    renderCountdownLine(); // 跨零点时自动更新天数
     scheduleTick();
   }
 
   /* ===== 刷新恢复与离开结算 ===== */
   function hydrateTimers() {
-    const now = Date.now();
     const p = state.pomodoro;
-    if (p.isRunning && p.endAt && now >= p.endAt) {
+    if (p.isRunning && p.endAt && Date.now() >= p.endAt) {
       // 页面关闭期间本阶段已结束：补结算一次（不重复响铃）
       pausePomodoro();
       switchPomodoroStage(false);
@@ -723,18 +660,6 @@
     flushPendingRecords();
   }
   function onPageHide() {
-    const now = Date.now();
-    const s = state.stopwatch;
-    const total = U.stopwatchElapsed(s, now);
-    if (s.isRunning) {
-      s.baseElapsed = total; s.isRunning = false; s.startedAt = 0; s.autoPaused = true;
-    }
-    const delta = Math.max(0, total - (s.archivedSeconds || 0));
-    if (delta >= 60) {
-      // 自动归档未结算的专注时长，进入待写队列，下次启动补写
-      queuePendingRecord('stopwatch', delta, now);
-      s.archivedSeconds = total;
-    }
     saveTimers();
   }
 
@@ -1158,15 +1083,13 @@
       if (e.code === 'Space') {
         e.preventDefault();
         if (state.settings.mode === 'pomodoro') togglePomodoro();
-        if (state.settings.mode === 'stopwatch') toggleStopwatch();
       } else if (e.key === 'z' || e.key === 'Z') {
         toggleZenMode();
       } else if (e.key === 'f' || e.key === 'F') {
         fsBtn.click();
       } else if (e.key === '1') { setMode('clock'); }
       else if (e.key === '2') { setMode('pomodoro'); }
-      else if (e.key === '3') { setMode('stopwatch'); }
-      else if (e.key === '4') { setMode('target'); }
+      else if (e.key === '3') { setMode('target'); }
     });
   }
 
@@ -1181,11 +1104,9 @@
 
     timerToggleBtn.addEventListener('click', () => {
       if (state.settings.mode === 'pomodoro') togglePomodoro();
-      if (state.settings.mode === 'stopwatch') toggleStopwatch();
     });
     timerResetBtn.addEventListener('click', () => {
       if (state.settings.mode === 'pomodoro') resetPomodoro();
-      if (state.settings.mode === 'stopwatch') resetStopwatch();
     });
     timerSkipBtn.addEventListener('click', skipPomodoroStage);
     if (mottoWrap) mottoWrap.addEventListener('click', showNextMotto);
@@ -1272,12 +1193,11 @@
     /* 倒数日配置 */
     const targetTitleInput = $('#targetTitleInput');
     if (targetTitleInput) targetTitleInput.addEventListener('input', function () {
-      state.settings.targetTitle = this.value; saveSettings();
-      if (targetTitle) targetTitle.textContent = this.value;
+      state.settings.targetTitle = this.value; saveSettings(); renderCountdownLine();
     });
     const targetDateInput = $('#targetDateInput');
     if (targetDateInput) targetDateInput.addEventListener('change', function () {
-      state.settings.targetDate = this.value; saveSettings(); renderTargetCountdown();
+      state.settings.targetDate = this.value; saveSettings(); renderCountdownLine();
     });
 
     /* 滑块联动 */
@@ -1562,7 +1482,7 @@
     }
     function selectDate(dateStr, closeAfterSelect = false) {
       state.settings.targetDate = dateStr; saveSettings(); syncDisplay();
-      renderTargetCountdown();
+      renderCountdownLine();
       if (popover.classList.contains('show')) {
         const t = parseTargetDate(); curYear = t.y; curMonth = t.m; renderCalendar();
       }
