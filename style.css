@@ -286,8 +286,9 @@ body {
   cursor: pointer; transition: background .2s;
 }
 .sClose:hover { background: var(--white-18) }
-.sHeadBtns { display: flex; align-items: center; gap: 8px }
+.sHeadBtns { flex: 0 0 auto; display: flex; align-items: center; gap: 8px }
 .sLink {
+  flex: 0 0 auto; white-space: nowrap;
   height: 34px; padding: 0 14px; border: none; border-radius: 9px;
   background: var(--white-08); color: #fff; font-size: 14px;
   cursor: pointer; transition: background .2s;
@@ -1226,7 +1227,8 @@ input, textarea {
 /* ===== 设置搜索（v1.4.3：搜索框移入标题行，结果改为覆盖层） ===== */
 .sSearch {
   position: relative; display: flex; align-items: center; gap: 9px;
-  flex: 1 1 auto; min-width: 0; height: 36px; margin: 0;
+  /* 右边界固定：左侧留白吸收多余空间，宽度收窄后只往右缩，不变宽 */
+  flex: 0 1 330px; min-width: 0; height: 36px; margin: 0 0 0 auto;
   padding: 0 10px 0 12px;
   border: 1px solid var(--panel-border); border-radius: 10px;
   background: rgba(255,255,255,.04);

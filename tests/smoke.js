@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.4.5', () => assert.strictEqual(U.VERSION, '1.4.5'));
+check('版本号为 1.4.6', () => assert.strictEqual(U.VERSION, '1.4.6'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -177,6 +177,9 @@ check('v1.4.3：设置头部搜索 + 结果覆盖层 + 拼音搜索', () => {
   assert.ok(html.indexOf('id="sSearchResults"') > html.indexOf('id="sBody"'), '结果层未覆盖在内容区');
   // 图标改为矢量 SVG，避免字形基线偏移
   assert.ok(/<svg class="sSearchIcon"/.test(html), '搜索图标不是 SVG');
+  // 搜索框右对齐、宽度收窄，右侧按钮不被挤压换行
+  assert.ok(/\.sSearch \{[\s\S]*?flex: 0 1 330px/.test(css), '搜索框未收窄并右对齐');
+  assert.ok(/\.sLink \{[\s\S]*?white-space: nowrap/.test(css), '标题行按钮可能被挤压换行');
   assert.ok(css.includes('.sSearchResults {\n  position: absolute'), '结果层未绝对定位覆盖');
   // 搜索时内容区只压暗、不隐藏（否则底下的设置会消失，失去位置感）
   assert.ok(!/#settingsBox\.searching \.sBody \{[^}]*display:\s*none/.test(css), '搜索时仍在隐藏内容区');
