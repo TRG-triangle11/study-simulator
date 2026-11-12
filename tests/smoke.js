@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.4.0', () => assert.strictEqual(U.VERSION, '1.4.0'));
+check('版本号为 1.4.1', () => assert.strictEqual(U.VERSION, '1.4.1'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -122,6 +122,15 @@ check('目标倒计时配置集中在「日期待办」页', () => {
   assert.ok(!focusPane.includes('targetTitleInput'), '目标名称仍留在专注计时页');
   assert.ok(!focusPane.includes('swCountdown'), '倒计时开关仍留在专注计时页');
   assert.strictEqual((html.match(/id="swCountdown"/g) || []).length, 1, '倒计时开关重复');
+});
+
+check('秒数样式切换立即生效（v1.4.1 回归）', () => {
+  const app = read('app.js');
+  const from = app.indexOf('function updateVisibility');
+  const body = app.slice(from, app.indexOf('function setMode', from));
+  assert.ok(body.length > 0, '未找到 updateVisibility');
+  assert.ok(/applySecStyle\(\)/.test(body), 'updateVisibility 未应用秒数样式，切换会延迟生效');
+  assert.ok(!/^\s*syncGhostSeconds\(\);/m.test(body), '仍停留在只同步暗段、不更新 sec-eq 状态');
 });
 
 check('v1.4.0 新增：名句库 / 关闭秒针 / 壁纸浮窗 / 分组折叠', () => {

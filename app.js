@@ -628,7 +628,9 @@
     timerControls.style.display = (m === 'pomodoro' || m === 'stopwatch') ? 'flex' : 'none';
     timerSkipBtn.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
     renderCountdownLine();
-    syncGhostSeconds();
+    // 秒区显隐与「紧凑 / 等大」必须一起应用：只同步暗段而不更新 class，
+    // 会让切换按钮看起来无效（要等下次打开设置刷新时才生效）
+    applySecStyle();
     if (m === 'pomodoro') updatePomoBadge();
     else if (m === 'stopwatch') { timerBadge.className = ''; timerBadge.textContent = '正向专注计时'; }
     updateTimerControls();
