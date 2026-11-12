@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自习模拟器 v1.3</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="vignette"></div>
+
+<!-- 顶部模式切换栏 -->
+<div id="modeBar" role="toolbar" aria-label="模式切换">
+  <button class="modeBtn active" data-mode="clock">时钟 (1)</button>
+  <button class="modeBtn" data-mode="pomodoro">番茄钟 (2)</button>
+  <button class="modeBtn" data-mode="stopwatch">正计时 (3)</button>
+  <button class="modeBtn" data-mode="target">倒数日 (4)</button>
+  <button class="modeZenBtn" id="modeZenBtn" title="禅意极简模式 (快捷键 Z)">禅意 (Z)</button>
+</div>
+
+<!-- 退出禅意模式按钮 -->
+<button id="zenExitBtn" title="退出禅意模式 (快捷键 Z 或 Esc)"><span class="zenIcon">✕</span><span>退出禅意 (Z)</span></button>
+
+<!-- 主时钟 / 计时器主体 -->
+<div id="clockWrap">
+  <div id="clock" role="button" tabindex="0" aria-label="打开模拟器设置">
+    <div id="timerBadge" style="display:none">专注中</div>
+    <div id="targetTitle" style="display:none">距离 目标 还有</div>
+    <div id="date"></div>
+    <div id="time"><span id="tH">00</span><span class="sep unit">:</span><span id="tM">00</span><span class="sec-wrap"><span class="sep">:</span><span id="tS">00</span></span></div>
+
+    <!-- 计时器专属控制栏 -->
+    <div id="timerControls" style="display:none">
+      <button class="timerBtn primary" id="timerToggleBtn">▶ 开始专注</button>
+      <button class="timerBtn" id="timerResetBtn">↺ 重置</button>
+      <button class="timerBtn" id="timerSkipBtn">⏭ 跳过</button>
+    </div>
+
+    <!-- 每日励志寄语 -->
+    <div id="mottoWrap" title="点击换一句寄语">
+      <span id="mottoText"></span>
+    </div>
+
+    <div class="hint">点按打开设置 · 空格键暂停/继续 · 按 F 全屏</div>
+  </div>
+</div>
+
+<!-- 待办感应区 -->
+<div class="todoZone left" id="todoZoneLeft">
+  <div class="edge"></div>
+  <div class="todoPanel">
+    <h3>今日待办 <span class="cnt" id="todoCntL">0</span></h3>
+    <div class="todoList" id="todoListL"></div>
+    <div class="addTodo"><button class="addBtn" data-zone="L">＋ 添加待办</button><input class="addInput" data-zone="L" placeholder="输入事项，回车确认" aria-label="左侧待办内容"><button class="addGo" data-zone="L" aria-label="确认添加左侧待办">＋</button></div>
+  </div>
+  <div class="todoRemind" id="todoRemindL"></div>
+</div>
+<div class="todoZone right" id="todoZoneRight">
+  <div class="edge"></div>
+  <div class="todoPanel">
+    <h3>今日待办 <span class="cnt" id="todoCntR">0</span></h3>
+    <div class="todoList" id="todoListR"></div>
+    <div class="addTodo"><button class="addBtn" data-zone="R">＋ 添加待办</button><input class="addInput" data-zone="R" placeholder="输入事项，回车确认" aria-label="右侧待办内容"><button class="addGo" data-zone="R" aria-label="确认添加右侧待办">＋</button></div>
+  </div>
+  <div class="todoRemind" id="todoRemindR"></div>
+</div>
+
+<!-- 设置浮窗 -->
+<div id="settings" role="dialog" aria-modal="true" aria-label="模拟器设置">
+  <div id="settingsBox">
+    <div class="sHeader">
+      <h2>模拟器设置 <span class="ver">v1.3.0</span></h2>
+      <div class="sHeadBtns">
+        <button class="sLink" id="obReopen">引导</button>
+        <button class="sClose" id="sClose" aria-label="关闭设置">✕</button>
+      </div>
+    </div>
+
+    <!-- 分栏切换 Tab -->
+    <div class="sTabs" role="tablist" aria-label="设置分类">
+      <button class="sTabBtn active" data-tab="appearance" role="tab">🎨 外观时钟</button>
+      <button class="sTabBtn" data-tab="focus" role="tab">⏱ 专注计时</button>
+      <button class="sTabBtn" data-tab="date-todo" role="tab">📅 日期待办</button>
+      <button class="sTabBtn" data-tab="stats" role="tab">📊 自习统计</button>
+    </div>
+
+    <!-- 可独立滑动的设置内容区 -->
+    <div class="sBody">
+      <!-- Tab 1: 外观与时钟 -->
+      <div class="sTabPane active" id="tab-appearance">
+      <div class="sGroup">
+        <div class="sLabel">时间字体</div>
+        <div class="fontEntry" id="fontEntry" role="button" tabindex="0" aria-label="选择时间字体">
+          <span class="feName">选择字体</span>
+          <span class="feCur">当前：<b id="feCurName">现代无衬线 (HarmonyOS)</b><span class="feArrow">›</span></span>
+        </div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">时间字号 <span class="val" id="sizeVal">120px</span></div>
+        <div class="sizeRow">
+          <input type="range" id="sizeRange" min="48" max="200" step="2" value="120" aria-label="时间字号">
+          <output id="sizeOut">120</output>
+        </div>
+        <div class="miniHint">拖动调节时钟大小</div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">背景壁纸</div>
+        <div class="bgGrid" id="bgGrid"></div>
+        <div class="miniHint">自定义壁纸会压缩后存入本地数据库，避免占用过多空间</div>
+        <div id="dbHint" class="miniHint dbHint" style="display:none"></div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">背景暗化程度 <span class="val" id="dimVal">62%</span></div>
+        <div class="sizeRow">
+          <input type="range" id="dimRange" min="15" max="100" step="5" value="62" aria-label="背景暗化程度">
+          <output id="dimOut">62</output>
+        </div>
+        <div class="miniHint">数值越大背景越暗，时钟更清晰</div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">环境微动粒子特效</div>
+        <div class="particleOpts" id="particleOpts">
+          <button class="particleOpt active" data-effect="none">无 (默认)</button>
+          <button class="particleOpt" data-effect="rain">🌧️ 细雨</button>
+          <button class="particleOpt" data-effect="snow">❄️ 飘雪</button>
+          <button class="particleOpt" data-effect="dust">✨ 微尘</button>
+          <button class="particleOpt" data-effect="fireflies">💡 萤火</button>
+        </div>
+
+        <!-- 细雨参数微调面板 -->
+        <div id="rainParamsBox" style="display:none; margin-top:14px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08)">
+          <div class="toggleRow" style="margin-bottom:12px">
+            <div>
+              <div class="tName" style="font-size:13px">飘雨速度 <span class="val" id="rainSpeedVal" style="color:var(--color-accent);margin-left:6px">舒缓 (2档)</span></div>
+              <div class="tDesc">从极慢静谧到轻柔细雨，避免晃眼与视觉干扰</div>
+            </div>
+            <input type="range" id="rainSpeedRange" min="1" max="5" step="1" value="2" style="width:110px" aria-label="飘雨速度">
+          </div>
+          <div class="toggleRow">
+            <div>
+              <div class="tName" style="font-size:13px">雨滴密集度 <span class="val" id="rainDensityVal" style="color:var(--color-accent);margin-left:6px">疏朗 (2档)</span></div>
+              <div class="tDesc">调节同屏雨丝数量，从零星微雨到密雨</div>
+            </div>
+            <input type="range" id="rainDensityRange" min="1" max="5" step="1" value="2" style="width:110px" aria-label="雨滴密集度">
+          </div>
+        </div>
+
+        <div class="miniHint">轻量 Canvas 动态粒子，让桌面壁纸更有呼吸感</div>
+        <div id="motionHint" class="miniHint" style="display:none">系统已开启「减少动态效果」，粒子密度与帧率已自动降低</div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">时钟样式选项</div>
+        <div class="toggles">
+          <div class="toggleRow">
+            <div><div class="tName">秒数样式</div><div class="tDesc">紧凑 或 等大</div></div>
+          </div>
+          <div class="posOpts" id="secStyleOpts">
+            <button class="posOpt" data-sec="compact">紧凑</button>
+            <button class="posOpt" data-sec="equal">等大</button>
+          </div>
+          <div class="toggleRow" style="margin-top:14px">
+            <div><div class="tName">翻页时钟框</div><div class="tDesc">仿真透明翻页立体卡片小方框</div></div>
+            <label class="switch"><input type="checkbox" id="swFlip" aria-label="翻页时钟框"><span class="slider"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: 专注与计时 -->
+    <div class="sTabPane" id="tab-focus">
+      <div class="sGroup">
+        <div class="sLabel">番茄钟时长配置</div>
+        <div class="toggles">
+          <div class="toggleRow">
+            <div><div class="tName">专注时长 (分钟)</div><div class="tDesc">标准番茄钟推荐 25 分钟</div></div>
+            <div class="numStepper">
+              <input type="number" id="pomoWorkInput" min="1" max="120" value="25" class="nsInput" aria-label="专注时长（分钟）">
+              <div class="nsBtns">
+                <button type="button" class="nsArrow nsUp" id="pomoWorkUp" title="增加 1 分钟" aria-label="增加专注时长">▲</button>
+                <button type="button" class="nsArrow nsDown" id="pomoWorkDown" title="减少 1 分钟" aria-label="减少专注时长">▼</button>
+              </div>
+            </div>
+          </div>
+          <div class="toggleRow">
+            <div><div class="tName">休息时长 (分钟)</div><div class="tDesc">推荐 5 分钟小憩，舒缓身心</div></div>
+            <div class="numStepper">
+              <input type="number" id="pomoBreakInput" min="1" max="60" value="5" class="nsInput" aria-label="休息时长（分钟）">
+              <div class="nsBtns">
+                <button type="button" class="nsArrow nsUp" id="pomoBreakUp" title="增加 1 分钟" aria-label="增加休息时长">▲</button>
+                <button type="button" class="nsArrow nsDown" id="pomoBreakDown" title="减少 1 分钟" aria-label="减少休息时长">▼</button>
+              </div>
+            </div>
+          </div>
+          <div class="toggleRow">
+            <div><div class="tName">专注提示音</div><div class="tDesc">完成专注或小憩时播放空灵颂钵和弦</div></div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="sLink" id="testChimeBtn" style="height:28px;padding:0 10px;font-size:12px">试听</button>
+              <label class="switch"><input type="checkbox" id="swSound" checked aria-label="专注提示音"><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">目标倒数日配置</div>
+        <div class="toggles">
+          <div class="toggleRow">
+            <div><div class="tName">目标名称</div><div class="tDesc">如：距离 2027考研 还有</div></div>
+            <input type="text" id="targetTitleInput" placeholder="输入倒数标题" aria-label="倒数目标名称" style="width:160px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff">
+          </div>
+          <div class="toggleRow dateSettingRow">
+            <div><div class="tName">目标日期</div><div class="tDesc">倒计时截止日期（支持上下键调节或点击日历）</div></div>
+            <div class="dateAdjustRow">
+              <div class="datePart">
+                <div class="numStepper sm">
+                  <input type="number" id="dpYearInput" min="2020" max="2099" class="nsInput sm" style="width:48px" aria-label="目标年份">
+                  <div class="nsBtns">
+                    <button type="button" class="nsArrow nsUp" id="dpYearUp" title="下一年" aria-label="下一年">▲</button>
+                    <button type="button" class="nsArrow nsDown" id="dpYearDown" title="上一年" aria-label="上一年">▼</button>
+                  </div>
+                </div>
+                <span class="dateUnit">年</span>
+              </div>
+
+              <div class="datePart">
+                <div class="numStepper sm">
+                  <input type="number" id="dpMonthInput" min="1" max="12" class="nsInput sm" style="width:32px" aria-label="目标月份">
+                  <div class="nsBtns">
+                    <button type="button" class="nsArrow nsUp" id="dpMonthUp" title="下一月" aria-label="下一月">▲</button>
+                    <button type="button" class="nsArrow nsDown" id="dpMonthDown" title="上一月" aria-label="上一月">▼</button>
+                  </div>
+                </div>
+                <span class="dateUnit">月</span>
+              </div>
+
+              <div class="datePart">
+                <div class="numStepper sm">
+                  <input type="number" id="dpDayInput" min="1" max="31" class="nsInput sm" style="width:32px" aria-label="目标日期">
+                  <div class="nsBtns">
+                    <button type="button" class="nsArrow nsUp" id="dpDayUp" title="下一天" aria-label="下一天">▲</button>
+                    <button type="button" class="nsArrow nsDown" id="dpDayDown" title="上一天" aria-label="上一天">▼</button>
+                  </div>
+                </div>
+                <span class="dateUnit">日</span>
+              </div>
+
+              <div class="customDateWrap" id="customDateWrap">
+                <button type="button" class="calPopBtn" id="customDateBtn" title="打开/关闭日历浮窗" aria-label="打开日历">📅</button>
+                <input type="hidden" id="targetDateInput" value="">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: 日期与待办 -->
+    <div class="sTabPane" id="tab-date-todo">
+      <div class="sGroup">
+        <div class="sLabel">专注寄语</div>
+        <div class="toggles">
+          <div class="toggleRow">
+            <div><div class="tName">显示每日寄语</div><div class="tDesc">时钟下方自习名言（主界面点击文字直接换下一句）</div></div>
+            <label class="switch"><input type="checkbox" id="swMotto" checked aria-label="显示每日寄语"><span class="slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">日期显示</div>
+        <div class="toggles">
+          <div class="toggleRow">
+            <div><div class="tName">显示秒数</div><div class="tDesc">关闭后仅显示 时:分（倒数日的分钟不受影响）</div></div>
+            <label class="switch"><input type="checkbox" id="swSec" aria-label="显示秒数"><span class="slider"></span></label>
+          </div>
+          <div class="toggleRow">
+            <div><div class="tName">显示日期栏</div><div class="tDesc">控制时钟上方日期是否显示</div></div>
+            <label class="switch"><input type="checkbox" id="swDate" aria-label="显示日期栏"><span class="slider"></span></label>
+          </div>
+          <div class="toggleRow" id="dateSubRow">
+            <div class="dateSub">
+              <div class="subToggle"><span>显示年份</span><label class="switch sm"><input type="checkbox" id="swYear" aria-label="显示年份"><span class="slider"></span></label></div>
+              <div class="subToggle"><span>显示月日</span><label class="switch sm"><input type="checkbox" id="swMonthDay" aria-label="显示月日"><span class="slider"></span></label></div>
+              <div class="subToggle"><span>显示星期</span><label class="switch sm"><input type="checkbox" id="swWeekday" aria-label="显示星期"><span class="slider"></span></label></div>
+            </div>
+          </div>
+          <div class="sGroup" id="dateSizeGroup" style="margin-top:14px">
+            <div class="sLabel">日期字号 <span class="val" id="dateSizeVal">22px</span></div>
+            <div class="sizeRow">
+              <input type="range" id="dateSizeRange" min="12" max="40" step="1" value="22" aria-label="日期字号">
+              <output id="dateSizeOut">22</output>
+            </div>
+          </div>
+          <div class="sGroup" id="dateSpacingGroup" style="margin-top:14px">
+            <div class="sLabel">日期字间距 <span class="val" id="dateSpacingVal">0.22em</span></div>
+            <div class="sizeRow">
+              <input type="range" id="dateSpacingRange" min="0" max="50" step="1" value="22" aria-label="日期字间距">
+              <output id="dateSpacingOut">0.22</output>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sGroup">
+        <div class="sLabel">待办清单</div>
+        <div class="toggles">
+          <div class="sGroup" id="todoSizeGroup">
+            <div class="sLabel">待办提醒字号 <span class="val" id="todoSizeVal">14px</span></div>
+            <div class="sizeRow">
+              <input type="range" id="todoSizeRange" min="10" max="26" step="1" value="14" aria-label="待办提醒字号">
+              <output id="todoSizeOut">14</output>
+            </div>
+          </div>
+          <div class="sGroup" id="todoOpacityGroup" style="margin-top:14px">
+            <div class="sLabel">待办文字透明度 <span class="val" id="todoOpacityVal">60%</span></div>
+            <div class="sizeRow">
+              <input type="range" id="todoOpacityRange" min="20" max="100" step="5" value="60" aria-label="待办文字透明度">
+              <output id="todoOpacityOut">60</output>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: 自习统计 -->
+    <div class="sTabPane" id="tab-stats">
+      <div class="statGrid">
+        <div class="statCard">
+          <div class="statVal" id="statTodayTime">0 分钟</div>
+          <div class="statLbl">今日自习专注</div>
+        </div>
+        <div class="statCard">
+          <div class="statVal" id="statTotalPomos">0</div>
+          <div class="statLbl">累计完成番茄</div>
+        </div>
+        <div class="statCard">
+          <div class="statVal" id="statDoneTodos">0</div>
+          <div class="statLbl">已完成待办事项</div>
+        </div>
+      </div>
+
+      <!-- 60 天打卡热力图 -->
+      <div class="heatmapContainer">
+        <div class="heatmapHeader">
+          <span>近 60 天自习打卡热力图</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            少 <span class="heatmapCell" style="width:10px;height:10px"></span>
+            <span class="heatmapCell" data-level="1" style="width:10px;height:10px"></span>
+            <span class="heatmapCell" data-level="2" style="width:10px;height:10px"></span>
+            <span class="heatmapCell" data-level="3" style="width:10px;height:10px"></span>
+            <span class="heatmapCell" data-level="4" style="width:10px;height:10px"></span> 多
+          </span>
+        </div>
+        <div class="heatmapGrid" id="heatmapGrid"></div>
+      </div>
+
+      <div class="sLabel">近期专注记录</div>
+      <div class="statList" id="statRecordList"></div>
+    </div> <!-- /tab-stats -->
+    </div> <!-- /sBody -->
+  </div> <!-- /settingsBox -->
+</div> <!-- /settings -->
+
+<!-- 暗黑主题目标日期弹出日历全局浮窗 -->
+<div class="datePickerPopover" id="datePickerPopover" role="dialog" aria-label="选择目标日期">
+  <div class="dpHead">
+    <button type="button" class="dpNavBtn" id="dpPrevMonth" title="上个月" aria-label="上个月">‹</button>
+    <div class="dpTitle" id="dpMonthTitle">—</div>
+    <button type="button" class="dpNavBtn" id="dpNextMonth" title="下个月" aria-label="下个月">›</button>
+  </div>
+  <div class="dpShortcuts">
+    <button type="button" class="dpPill" data-days="7">+7天</button>
+    <button type="button" class="dpPill" data-days="30">+30天</button>
+    <button type="button" class="dpPill" data-days="100">+100天</button>
+    <button type="button" class="dpPill" data-days="365">+1年</button>
+  </div>
+  <div class="dpWeekdays">
+    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+  </div>
+  <div class="dpDaysGrid" id="dpDaysGrid"></div>
+</div>
+
+<!-- 新手引导 -->
+<div id="onboard" role="dialog" aria-modal="true" aria-label="自习模拟器使用指引">
+  <div id="onboardBox">
+    <div class="obHead">
+      <h2>自习模拟器使用指引</h2>
+      <p>极简·沉浸·专注，核心功能一览</p>
+    </div>
+
+    <div class="obGrid">
+      <div class="obCard">
+        <div class="obCardTitle"><span class="obIcon">⏱</span> 四大模式与快捷键</div>
+        <div class="obCardDesc">按 <b>1~4</b> 键随时切换时钟、番茄钟、正计时与倒数日；<b>空格</b> 启停计时，<b>Z</b> 禅意极简，<b>F</b> 全屏沉浸，<b>Esc</b> 关闭浮窗。</div>
+      </div>
+      <div class="obCard">
+        <div class="obCardTitle"><span class="obIcon">🎧</span> 仿真白噪音 ＆ 细雨</div>
+        <div class="obCardDesc">右下角「🎧 氛围」自调雨声、水滴、壁炉与潮汐混音，可设置主音量；设置中支持<b>微调雨速与雨滴密度</b>。</div>
+      </div>
+      <div class="obCard">
+        <div class="obCardTitle"><span class="obIcon">📋</span> 左右感应待办清单</div>
+        <div class="obCardDesc">鼠标移近屏幕<b>左侧或右侧边缘</b>自动滑出今日待办；触摸设备点击边缘展开，回车快速添加。</div>
+      </div>
+      <div class="obCard">
+        <div class="obCardTitle"><span class="obIcon">🎨</span> 田野都市壁纸 ＆ 设置</div>
+        <div class="obCardDesc"><b>点击主时钟</b>打开设置，自由切换田野与都市窗景壁纸、多种鸿蒙字体、背景暗化程度与 60 天打卡热力图。</div>
+      </div>
+    </div>
+
+    <div class="obFoot">
+      <button class="obBtn" id="obClose">开始专注自习</button>
+    </div>
+  </div>
+</div>
+
+<!-- 字体选择详情浮窗 -->
+<div id="fontDetail" role="dialog" aria-modal="true" aria-label="选择时间字体">
+  <div id="fontDetailBox">
+    <div class="fdLabel">选择时间字体</div>
+    <div class="fdGrid" id="fdGrid"></div>
+    <div class="fdBtns">
+      <button class="fdBtn back" id="fdBack">返回</button>
+    </div>
+  </div>
+</div>
+
+<!-- 氛围白噪音浮动按钮与混音面板 -->
+<button id="ambientBtn" title="打开氛围白噪音混音台">
+  <span class="soundDot"></span>
+  <span>🎧 氛围音效</span>
+</button>
+
+<div id="ambientPanel" role="region" aria-label="氛围白噪音混音台">
+  <div class="ambHeader">
+    <h3>🎧 氛围白噪音混音台</h3>
+    <label class="switch"><input type="checkbox" id="ambMasterToggle" aria-label="白噪音总开关"><span class="slider"></span></label>
+  </div>
+  <div class="ambMasterVolRow">
+    <span>主音量</span>
+    <input type="range" id="ambMasterVol" min="0" max="100" value="80" aria-label="主音量">
+    <span id="ambMasterVolVal">80%</span>
+  </div>
+  <div class="ambPresets">
+    <button class="ambPresetBtn" data-preset="rain">🌧️ 窗外细雨</button>
+    <button class="ambPresetBtn" data-preset="fire">🔥 温暖壁炉</button>
+    <button class="ambPresetBtn" data-preset="library">📖 深夜自习</button>
+    <button class="ambPresetBtn" data-preset="waves">🌊 宁静海潮</button>
+  </div>
+  <div class="ambTrackList" id="ambTrackList"></div>
+  <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-top:6px">Web Audio 原生合成 · 100% 离线可用</div>
+</div>
+
+<button id="fsBtn" title="全屏显示">全屏显示</button>
+<input type="file" id="fileInput" accept="image/*" aria-label="上传自定义壁纸">
+
+<!-- 核心脚本加载（util.js 必须最先加载） -->
+<script src="util.js"></script>
+<script src="db.js"></script>
+<script src="sound.js"></script>
+<script src="ambient.js"></script>
+<script src="particles.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

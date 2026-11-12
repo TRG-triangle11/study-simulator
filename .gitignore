@@ -1,0 +1,15 @@
+# 本地工作记录（WorkBuddy 项目数据，保留在本机，不上传）
+.workbuddy/
+
+# 操作系统 / 编辑器产物
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.tmp
+*.swp
+node_modules/
+
+# 说明：
+# assets/ 与 history/1.2/ 是项目交付资源，需要纳入版本管理，故不忽略。
+# 后续版本使用 git tag 标记，不再复制物理快照目录。
