@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.3.2', () => assert.strictEqual(U.VERSION, '1.3.2'));
+check('版本号为 1.3.3', () => assert.strictEqual(U.VERSION, '1.3.3'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -77,17 +77,36 @@ check('index.html 脚本加载顺序正确（util 最先）', () => {
   const order = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1]);
   assert.deepStrictEqual(order, ['util.js', 'db.js', 'sound.js', 'ambient.js', 'particles.js', 'app.js']);
 });
-check('模式栏去掉正计时与括号编号，倒数文字行存在', () => {
+check('模式栏仅时钟 / 番茄钟 / 禅意，大时钟不再被隐藏', () => {
   const html = read('index.html');
   const bar = html.match(/<div id="modeBar"[\s\S]*?<\/div>/);
   assert.ok(bar, '未找到模式栏');
   assert.ok(!bar[0].includes('data-mode="stopwatch"'), '正计时按钮仍存在');
+  assert.ok(!bar[0].includes('data-mode="target"'), '倒数日按钮仍存在');
   assert.ok(!/\(\d\)/.test(bar[0]), '按钮文案仍含括号数字');
   assert.ok(bar[0].includes('>时钟</button>'));
   assert.ok(bar[0].includes('>番茄钟</button>'));
-  assert.ok(bar[0].includes('>倒数日</button>'));
   assert.ok(html.includes('id="countdownLine"'), '缺少倒数文字行');
   assert.ok(!html.includes('id="targetTitle"'), '旧倒数标题元素未移除');
+  const css = read('style.css');
+  assert.ok(!css.includes('[data-mode="target"]'), 'CSS 仍存在隐藏大时钟的倒数日规则');
+  const app = read('app.js');
+  assert.ok(app.includes("elDate.style.display = state.settings.showDate ? '' : 'none'"), '日期仍受计时模式限制');
+  assert.ok(app.includes("if (!['clock', 'pomodoro'].includes(initialSettings.mode))"), '旧设置未做模式回落兼容');
+});
+check('目标倒计时配置集中在「日期待办」页', () => {
+  const html = read('index.html');
+  const start = html.indexOf('<div class="sTabPane" id="tab-date-todo">');
+  const end = html.indexOf('<!-- Tab 4', start);
+  const focusStart = html.indexOf('<div class="sTabPane" id="tab-focus">');
+  assert.ok(focusStart > 0 && start > focusStart && end > start, '设置页结构异常');
+  const pane = html.slice(start, end), focusPane = html.slice(focusStart, start);
+  assert.ok(pane.includes('目标倒计时'), '缺少目标倒计时分组');
+  ['swCountdown', 'targetTitleInput', 'dpYearInput', 'dpMonthInput', 'dpDayInput', 'targetDateInput']
+    .forEach((id) => assert.ok(pane.includes('id="' + id + '"'), id + ' 不在日期待办页'));
+  assert.ok(!focusPane.includes('targetTitleInput'), '目标名称仍留在专注计时页');
+  assert.ok(!focusPane.includes('swCountdown'), '倒计时开关仍留在专注计时页');
+  assert.strictEqual((html.match(/id="swCountdown"/g) || []).length, 1, '倒计时开关重复');
 });
 
 console.log('\n[3] 资源文件完整性');
@@ -187,7 +206,7 @@ function preset(sel, keys, prop) {
   });
 }
 function queryAll(sel) {
-  if (sel === '.modeBtn') return preset(sel, ['clock', 'pomodoro', 'target'], 'mode');
+  if (sel === '.modeBtn') return preset(sel, ['clock', 'pomodoro'], 'mode');
   if (sel === '.sTabBtn') return preset(sel, ['appearance', 'focus', 'date-todo', 'stats'], 'tab');
   if (sel === '.sTabPane') return preset(sel, [1, 2, 3, 4], 'x');
   if (sel === '#secStyleOpts .posOpt') return preset(sel, ['compact', 'equal'], 'sec');

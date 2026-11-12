@@ -167,6 +167,9 @@
   const obsoleteFontMap = { orbitron: 'sharetech', cinzel: 'modern', dsd7: 'dseg7' };
   if (obsoleteFontMap[initialSettings.font]) initialSettings.font = obsoleteFontMap[initialSettings.font];
 
+  // v1.3.3：移除「倒数日」模式（它只负责隐藏时钟）；旧设置平滑回落到时钟，避免主界面空白
+  if (!['clock', 'pomodoro'].includes(initialSettings.mode)) initialSettings.mode = 'clock';
+
   /* ===== 计时器持久化状态 ===== */
   function defaultTimers(workSec) {
     return { status: 'work', remaining: workSec, endAt: 0, isRunning: false, rounds: 0, phaseTotal: workSec };
@@ -525,13 +528,13 @@
     const m = state.settings.mode;
     elClock.dataset.mode = m;
     elTime.dataset.mode = m;
-    elDate.style.display = (state.settings.showDate && m === 'clock') ? '' : 'none';
+    // 日期与倒计时是主界面常驻信息，只由各自开关控制，不受计时模式影响
+    elDate.style.display = state.settings.showDate ? '' : 'none';
+    countdownLine.style.display = state.settings.showCountdown !== false ? '' : 'none';
     elSecWrap.style.display = state.settings.showSec ? '' : 'none';
     timerBadge.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
     timerControls.style.display = m === 'pomodoro' ? 'flex' : 'none';
     timerSkipBtn.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
-    // 开关只管常驻行；倒数日模式本身必须有内容，始终显示
-    countdownLine.style.display = (state.settings.showCountdown !== false || m === 'target') ? '' : 'none';
     renderCountdownLine();
     syncGhostSeconds();
     if (m === 'pomodoro') updatePomoBadge();
@@ -540,7 +543,7 @@
   }
 
   function setMode(mode, silent) {
-    if (!['clock', 'pomodoro', 'target'].includes(mode)) mode = 'clock';
+    if (!['clock', 'pomodoro'].includes(mode)) mode = 'clock';
     state.settings.mode = mode;
     saveSettings();
     document.querySelectorAll('.modeBtn').forEach((btn) => {
@@ -552,10 +555,21 @@
   }
 
   function renderCurrentMode() {
-    const m = state.settings.mode;
-    if (m === 'clock') renderClockTime();
-    else if (m === 'pomodoro') renderPomodoroTime();
-    // target：不渲染大时钟，只显示一行倒数文字
+    // 时钟模式显示实时时间，番茄钟模式显示本阶段剩余时间；两种情况大时钟都在
+    if (state.settings.mode === 'pomodoro') renderPomodoroTime();
+    else renderClockTime();
+  }
+
+  // 日期文字独立于时钟渲染：番茄钟模式下也要能跨零点 / 跨天更新
+  function renderDateText() {
+    if (!state.settings.showDate) return;
+    const now = new Date();
+    const parts = [];
+    if (state.settings.showYear) parts.push(now.getFullYear() + ' 年');
+    if (state.settings.showMonthDay) parts.push((now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日');
+    if (state.settings.showWeekday) parts.push('\u3000' + WEEK[now.getDay()]);
+    const text = parts.join(' ');
+    if (elDate.textContent !== text) elDate.textContent = text;
   }
 
   function renderClockTime() {
@@ -563,13 +577,7 @@
     elTH.textContent = pad(now.getHours());
     elTM.textContent = pad(now.getMinutes());
     elTS.textContent = pad(now.getSeconds());
-    if (state.settings.showDate) {
-      const parts = [];
-      if (state.settings.showYear) parts.push(now.getFullYear() + ' 年');
-      if (state.settings.showMonthDay) parts.push((now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日');
-      if (state.settings.showWeekday) parts.push('\u3000' + WEEK[now.getDay()]);
-      elDate.textContent = parts.join(' ');
-    }
+    renderDateText();
   }
 
   /* ===== 番茄钟（绝对时间戳） ===== */
@@ -665,6 +673,7 @@
       handlePomodoroStageEnd(false);
     }
     renderCurrentMode();
+    renderDateText();      // 番茄钟模式下日期同样跨零点更新
     renderCountdownLine(); // 跨零点时自动更新天数
     scheduleTick();
   }
@@ -1116,7 +1125,6 @@
         fsBtn.click();
       } else if (e.key === '1') { setMode('clock'); }
       else if (e.key === '2') { setMode('pomodoro'); }
-      else if (e.key === '3') { setMode('target'); }
     });
   }
 

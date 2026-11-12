@@ -1088,17 +1088,7 @@ input, textarea {
   user-select: text;
 }
 
-/* 倒数日：sec-wrap 承载「分钟」，需与秒样式区分且保持可读 */
-#time[data-mode="target"] .sec-wrap {
-  font-size: .62em;
-  opacity: .92;
-  align-self: center;
-  margin: 0 0 0 .12em;
-}
-#time[data-mode="target"] .sec-wrap .sep {
-  font-size: .8em;
-  opacity: .8;
-}
+/* v1.3.3：倒数日模式已移除，时钟在所有模式下常驻 */
 
 /* 新增控件 */
 .ver {
@@ -1149,7 +1139,7 @@ input, textarea {
   }
 }
 
-/* ===== v1.3.1：目标倒数日改为与日期同排的一行文字 ===== */
+/* ===== 目标倒计时：与日期同排的一行文字（v1.3.3 起所有模式常驻，时钟不再被隐藏） ===== */
 #countdownLine {
   font-weight: 400;
   letter-spacing: .22em;
@@ -1160,18 +1150,9 @@ input, textarea {
   line-height: 1.5;
 }
 #clock #date { margin-bottom: 12px; }
-#clock[data-mode="target"] #time { display: none !important; }
-#clock[data-mode="target"] #countdownLine {
-  font-size: 42px;
-  letter-spacing: .1em;
-  color: #fff;
-  margin-bottom: 0;
-}
-#clock[data-mode="target"] #mottoWrap { margin-top: 26px; }
 @media (max-width: 768px) {
   #countdownLine { font-size: 16px; margin-bottom: 20px; }
   #clock #date { margin-bottom: 10px; }
-  #clock[data-mode="target"] #countdownLine { font-size: 28px; margin-bottom: 0; }
 }
 
 /* ===== v1.3.2：七段数码的「未点亮段」底层 ===== */
