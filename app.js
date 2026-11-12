@@ -893,6 +893,13 @@
     elTime.classList.toggle('segment', segment);
     // 紧凑 / 等大完全由用户选择决定（数码管也遵循，暗段同比缩放仍对齐）
     elTime.classList.toggle('sec-eq', state.settings.secStyle === 'equal');
+    // 设置面板会盖住主时钟，同步一份缩略预览，点完立刻能看到差异
+    const pv = $('#secPreview');
+    if (pv) {
+      pv.classList.toggle('eq', state.settings.secStyle === 'equal');
+      pv.classList.toggle('off', state.settings.showSec === false);
+      if (elTime.style.fontFamily) pv.style.fontFamily = elTime.style.fontFamily;
+    }
     syncGhostSeconds();
   }
 
@@ -1998,7 +2005,7 @@
     bindSizeControl();
 
     preloadFonts();
-    applyFont(); syncSize(); applyFlip(); applySecStyle();
+    applyFont(); syncSize(); applyFlip(); applySecStyle(); syncSecStyleButtons();
     applyDate(); applyMottoSetting(); renderTodos();
     hydrateTimers();
     setMode(state.settings.mode || 'clock', true); // 启动时不弹出模式栏

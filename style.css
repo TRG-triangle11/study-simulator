@@ -1270,3 +1270,19 @@ input, textarea {
   .srPath { display: none; }
 }
 
+/* 秒数样式实时预览（设置面板会遮住主时钟，靠这里即时看到差异） */
+.secPreview {
+  display: flex; align-items: flex-end; justify-content: center;
+  margin-top: 10px; padding: 12px 0 10px; border-radius: 10px;
+  background: rgba(0, 0, 0, .28); border: 1px solid var(--white-08);
+  font-family: var(--font-clock); font-weight: 700; line-height: 1;
+  font-size: 30px; color: #fff; letter-spacing: .02em;
+  font-variant-numeric: tabular-nums; overflow: hidden;
+}
+.secPreview .pvSec {
+  font-size: .42em; opacity: .72; align-self: flex-end;
+  margin: 0 0 0 .12em; display: inline-flex; align-items: center;
+}
+.secPreview.eq .pvSec { font-size: 1em; opacity: 1; align-self: center; margin: 0 .05em; }
+.secPreview.off .pvSec { display: none; }
+

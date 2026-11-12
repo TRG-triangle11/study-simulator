@@ -80,7 +80,7 @@ check('JS 中引用的 #id 均存在于 index.html', () => {
 });
 check('index.html 脚本加载顺序正确（util 最先）', () => {
   const html = read('index.html');
-  const order = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1]);
+  const order = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1].split('?')[0]);
   assert.deepStrictEqual(order, ['util.js', 'db.js', 'sound.js', 'ambient.js', 'particles.js', 'app.js']);
 });
 check('模式栏为时钟 / 番茄钟 / 正计时 / 禅意，大时钟常驻', () => {
@@ -122,6 +122,20 @@ check('目标倒计时配置集中在「日期待办」页', () => {
   assert.ok(!focusPane.includes('targetTitleInput'), '目标名称仍留在专注计时页');
   assert.ok(!focusPane.includes('swCountdown'), '倒计时开关仍留在专注计时页');
   assert.strictEqual((html.match(/id="swCountdown"/g) || []).length, 1, '倒计时开关重复');
+});
+
+check('静态资源带版本参数，避免改完仍用旧缓存', () => {
+  const html = read('index.html');
+  assert.ok(/style\.css\?v=/.test(html), '样式表未带版本参数');
+  const scripts = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1]);
+  assert.ok(scripts.length >= 6 && scripts.every((s) => /\?v=/.test(s)), '存在未带版本参数的脚本');
+});
+check('秒数样式带实时预览', () => {
+  const html = read('index.html');
+  const app = read('app.js');
+  assert.ok(html.includes('id="secPreview"'), '缺少秒样式预览');
+  assert.ok(app.includes("$('#secPreview')"), '预览未与秒样式联动');
+  assert.ok(app.includes('syncSecStyleButtons();'), '初始未同步按钮选中态');
 });
 
 check('设置搜索框存在且可跨分类跳转', () => {
