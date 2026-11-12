@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.3.1', () => assert.strictEqual(U.VERSION, '1.3.1'));
+check('版本号为 1.3.2', () => assert.strictEqual(U.VERSION, '1.3.2'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -96,6 +96,29 @@ check('CSS 引用的字体文件均存在', () => {
   const urls = Array.from(css.matchAll(/url\('(assets\/[^']+)'\)/g), (m) => m[1]);
   assert.ok(urls.length >= 6);
   urls.forEach((p) => assert.ok(fs.existsSync(path.join(ROOT, p)), '缺少 ' + p));
+});
+check('自托管字体均为有效 woff2，旧字体已移除', () => {
+  const css = read('style.css');
+  const urls = [...new Set(Array.from(css.matchAll(/url\('(assets\/fonts\/[^']+)'\)/g), (m) => m[1]))];
+  assert.ok(urls.length >= 8, '字体声明过少');
+  urls.forEach((p) => {
+    const buf = fs.readFileSync(path.join(ROOT, p));
+    assert.strictEqual(buf.slice(0, 4).toString('ascii'), 'wOF2', p + ' 不是有效 woff2');
+  });
+  ['orbitron-500-latin.woff2', 'orbitron-700-latin.woff2', 'cinzel-600-latin.woff2'].forEach((f) => {
+    assert.ok(!fs.existsSync(path.join(ROOT, 'assets/fonts', f)), '旧字体未删除: ' + f);
+  });
+});
+check('字体方案已更新且倒计时开关存在', () => {
+  const app = read('app.js');
+  const html = read('index.html');
+  assert.ok(!/id: '(orbitron|cinzel|dsd7)'/.test(app), '仍引用已删除字体');
+  ['dseg7', 'sharetech', 'spacemono', 'plexmono', 'robotomono', 'outfit'].forEach((id) => {
+    assert.ok(app.includes(`id: '${id}'`), '缺少字体 ' + id);
+  });
+  assert.ok(html.includes('id="swCountdown"'), '缺少倒计时开关');
+  assert.ok(html.includes('id="timeGhost"'), '缺少七段暗段底层');
+  assert.ok(app.includes('showCountdown: true'), '缺少默认开启设置');
 });
 check('DEFAULT_BGS 引用的壁纸均存在', () => {
   const app = read('app.js');

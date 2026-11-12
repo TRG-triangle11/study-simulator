@@ -38,10 +38,13 @@
 
   /* ===== 字体方案 ===== */
   const FONTS = [
-    { id: 'modern',   name: '现代无衬线 (HarmonyOS)', css: '"HarmonyOS Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif', sample: '1234567890' },
-    { id: 'orbitron', name: '未来科技 (Orbitron)',    css: '"Orbitron", "Consolas", monospace', sample: '1234567890' },
-    { id: 'cinzel',   name: '古典衬线 (Cinzel)',      css: '"Cinzel", "Times New Roman", serif', sample: '1234567890' },
-    { id: 'dsd7',     name: '七段数码 (DSEG7)',       css: '"DSD7", "Consolas", monospace', sample: '1234567890' }
+    { id: 'modern',     name: '现代无衬线 (HarmonyOS)',    css: '"HarmonyOS Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif', sample: '12:34:56' },
+    { id: 'dseg7',      name: '数码管 (DSEG7 Modern)',     css: '"DSEG7 Modern", "Consolas", monospace', sample: '12:34:56', segment: true },
+    { id: 'sharetech',  name: '屏显等宽 (Share Tech Mono)', css: '"Share Tech Mono", "Consolas", monospace', sample: '12:34:56' },
+    { id: 'spacemono',  name: '几何等宽 (Space Mono)',      css: '"Space Mono", "Consolas", monospace', sample: '12:34:56' },
+    { id: 'plexmono',   name: '工业等宽 (IBM Plex Mono)',   css: '"IBM Plex Mono", "Consolas", monospace', sample: '12:34:56' },
+    { id: 'robotomono', name: '简洁等宽 (Roboto Mono)',     css: '"Roboto Mono", "Consolas", monospace', sample: '12:34:56' },
+    { id: 'outfit',     name: '圆润数字 (Outfit)',          css: '"Outfit", "Segoe UI", sans-serif', sample: '12:34:56' }
   ];
 
   /* ===== 励志/专注寄语 ===== */
@@ -142,7 +145,7 @@
     showSec: true, secStyle: 'compact',
     showDate: true, dateSize: 22, dateSpacing: 0.22,
     showYear: true, showMonthDay: true, showWeekday: true,
-    todoSize: 14, todoOpacity: 0.6, showMotto: true,
+    todoSize: 14, todoOpacity: 0.6, showMotto: true, showCountdown: true,
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
     targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
     particleEffect: 'none', rainSpeed: 2, rainDensity: 2
@@ -159,6 +162,10 @@
     window_rainy_anime: 'desk_rainy_anime', window_rainy_real: 'desk_rainy_real'
   };
   if (obsoleteBgMap[initialSettings.bg]) initialSettings.bg = obsoleteBgMap[initialSettings.bg];
+
+  // v1.3.2 字体方案变更：让旧设置平滑迁移，不出现「选中项为空」
+  const obsoleteFontMap = { orbitron: 'sharetech', cinzel: 'modern', dsd7: 'dseg7' };
+  if (obsoleteFontMap[initialSettings.font]) initialSettings.font = obsoleteFontMap[initialSettings.font];
 
   /* ===== 计时器持久化状态 ===== */
   function defaultTimers(workSec) {
@@ -222,7 +229,7 @@
   const elBg = $('#bg'), elVignette = $('#vignette'),
         elClock = $('#clock'), elDate = $('#date'),
         elTH = $('#tH'), elTM = $('#tM'), elTS = $('#tS'),
-        elSecWrap = $('.sec-wrap'), elTime = $('#time'),
+        elSecWrap = $('#time > .sec-wrap'), elTime = $('#time'),
         zoneL = $('#todoZoneLeft'), zoneR = $('#todoZoneRight'),
         remindL = $('#todoRemindL'), remindR = $('#todoRemindR'),
         settingsEl = $('#settings'), settingsBox = $('#settingsBox'),
@@ -439,10 +446,21 @@
   }
 
   /* ===== 字体 ===== */
+  function isSegmentFont() {
+    const fn = FONTS.find((x) => x.id === state.settings.font);
+    return !!(fn && fn.segment);
+  }
+  function syncGhostSeconds() {
+    const ghost = $('#timeGhost');
+    if (!ghost) return;
+    const ghostSec = ghost.querySelector('.sec-wrap');
+    if (ghostSec) ghostSec.style.display = elSecWrap.style.display;
+  }
   function applyFont() {
     const fn = FONTS.find((x) => x.id === state.settings.font) || FONTS[0];
     elTime.style.fontFamily = fn.css;
     if (feCurName) feCurName.textContent = fn.name;
+    applySecStyle();
   }
   function buildFonts() {
     const fn = FONTS.find((x) => x.id === state.settings.font) || FONTS[0];
@@ -512,8 +530,10 @@
     timerBadge.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
     timerControls.style.display = m === 'pomodoro' ? 'flex' : 'none';
     timerSkipBtn.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
-    // 倒数日是一行常驻文字；target 模式下大时钟由 CSS 隐藏，只放大这行字
+    // 开关只管常驻行；倒数日模式本身必须有内容，始终显示
+    countdownLine.style.display = (state.settings.showCountdown !== false || m === 'target') ? '' : 'none';
     renderCountdownLine();
+    syncGhostSeconds();
     if (m === 'pomodoro') updatePomoBadge();
     updateTimerControls();
     applyClockSize();
@@ -706,7 +726,13 @@
     updateVisibility();
     renderCurrentMode();
   }
-  function applySecStyle() { elTime.classList.toggle('sec-eq', state.settings.secStyle === 'equal'); }
+  function applySecStyle() {
+    const segment = isSegmentFont();
+    elTime.classList.toggle('segment', segment);
+    // 七段数码下让秒与主数字等大，暗段底层才能精确对齐
+    elTime.classList.toggle('sec-eq', segment || state.settings.secStyle === 'equal');
+    syncGhostSeconds();
+  }
 
   /* ===== 设置弹窗 ===== */
   function initSettingsTabs() {
@@ -823,6 +849,7 @@
     $('#swWeekday').checked = !!state.settings.showWeekday;
     $('#swFlip').checked = !!state.settings.flip;
     if ($('#swMotto')) $('#swMotto').checked = !!state.settings.showMotto;
+    if ($('#swCountdown')) $('#swCountdown').checked = state.settings.showCountdown !== false;
     if ($('#swSound')) $('#swSound').checked = !!state.settings.soundEnabled;
 
     if ($('#pomoWorkInput')) $('#pomoWorkInput').value = state.settings.pomoWorkMin || 25;
@@ -1145,6 +1172,11 @@
     const swMotto = $('#swMotto');
     if (swMotto) swMotto.addEventListener('change', function () {
       state.settings.showMotto = this.checked; saveSettings(); applyMottoSetting();
+    });
+    const swCountdown = $('#swCountdown');
+    if (swCountdown) swCountdown.addEventListener('change', function () {
+      state.settings.showCountdown = this.checked;
+      saveSettings(); updateVisibility();
     });
     const swSound = $('#swSound');
     if (swSound) swSound.addEventListener('change', function () {

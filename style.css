@@ -1,48 +1,22 @@
 /* ===== 自习模拟器 — style.css ===== */
 
-/* ===== 自托管本地字体声明 ===== */
-@font-face {
-  font-family: 'HarmonyOS Sans SC';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('assets/fonts/harmonyos-sans-sc-regular.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'HarmonyOS Sans SC';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('assets/fonts/harmonyos-sans-sc-bold.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Orbitron';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('assets/fonts/orbitron-500-latin.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Orbitron';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('assets/fonts/orbitron-700-latin.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Cinzel';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('assets/fonts/cinzel-600-latin.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'DSD7';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2');
-}
+/* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2') format('woff2'); }
+
+/* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
+@font-face { font-family: 'DSEG7 Modern'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/dseg7-modern-700.woff2') format('woff2'); }
+@font-face { font-family: 'DSEG7 Modern'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/dseg7-modern-700.woff2') format('woff2'); }
+@font-face { font-family: 'Share Tech Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/share-tech-mono-400.woff2') format('woff2'); }
+@font-face { font-family: 'Share Tech Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/share-tech-mono-400.woff2') format('woff2'); }
+@font-face { font-family: 'Space Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/space-mono-700.woff2') format('woff2'); }
+@font-face { font-family: 'Space Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/space-mono-700.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/roboto-mono-700.woff2') format('woff2'); }
+@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/roboto-mono-700.woff2') format('woff2'); }
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/outfit-700.woff2') format('woff2'); }
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/outfit-700.woff2') format('woff2'); }
 
 /* ===== CSS 变量 ===== */
 :root {
@@ -1199,4 +1173,15 @@ input, textarea {
   #clock #date { margin-bottom: 10px; }
   #clock[data-mode="target"] #countdownLine { font-size: 28px; margin-bottom: 0; }
 }
+
+/* ===== v1.3.2：七段数码的「未点亮段」底层 ===== */
+#timeGhost {
+  position: absolute; inset: 0;
+  display: none; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.085);
+  pointer-events: none; -webkit-user-select: none; user-select: none;
+}
+#time.segment #timeGhost { display: flex; }
+#timeGhost .unit, #timeGhost .sec-wrap, #timeGhost .sep { opacity: 1; }
+#time > span, #time > .sec-wrap { position: relative; z-index: 1; }
 

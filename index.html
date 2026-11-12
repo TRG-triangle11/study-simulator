@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自习模拟器 v1.3.1</title>
+<title>自习模拟器 v1.3.2</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -29,7 +29,7 @@
     <div id="timerBadge" style="display:none">专注中</div>
     <div id="date"></div>
     <div id="countdownLine"></div>
-    <div id="time"><span id="tH">00</span><span class="sep unit">:</span><span id="tM">00</span><span class="sec-wrap"><span class="sep">:</span><span id="tS">00</span></span></div>
+    <div id="time"><div id="timeGhost" aria-hidden="true"><span>88</span><span class="sep unit">:</span><span>88</span><span class="sec-wrap"><span class="sep">:</span><span>88</span></span></div><span id="tH">00</span><span class="sep unit">:</span><span id="tM">00</span><span class="sec-wrap"><span class="sep">:</span><span id="tS">00</span></span></div>
 
     <!-- 计时器专属控制栏 -->
     <div id="timerControls" style="display:none">
@@ -71,7 +71,7 @@
 <div id="settings" role="dialog" aria-modal="true" aria-label="模拟器设置">
   <div id="settingsBox">
     <div class="sHeader">
-      <h2>模拟器设置 <span class="ver">v1.3.1</span></h2>
+      <h2>模拟器设置 <span class="ver">v1.3.2</span></h2>
       <div class="sHeadBtns">
         <button class="sLink" id="obReopen">引导</button>
         <button class="sClose" id="sClose" aria-label="关闭设置">✕</button>
@@ -277,7 +277,11 @@
         <div class="sLabel">日期显示</div>
         <div class="toggles">
           <div class="toggleRow">
-            <div><div class="tName">显示秒数</div><div class="tDesc">关闭后仅显示 时:分（倒数日的分钟不受影响）</div></div>
+            <div><div class="tName">显示目标倒计时</div><div class="tDesc">主界面日期下方的一行文字；关闭后仅在倒数日模式显示</div></div>
+            <label class="switch"><input type="checkbox" id="swCountdown" checked aria-label="显示目标倒计时"><span class="slider"></span></label>
+          </div>
+          <div class="toggleRow">
+            <div><div class="tName">显示秒数</div><div class="tDesc">关闭后仅显示 时:分</div></div>
             <label class="switch"><input type="checkbox" id="swSec" aria-label="显示秒数"><span class="slider"></span></label>
           </div>
           <div class="toggleRow">
