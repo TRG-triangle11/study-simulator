@@ -1220,3 +1220,53 @@ input, textarea {
   #bgDetailBox .bgGrid { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* ===== v1.4.2：设置搜索 ===== */
+.sSearch {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  height: 38px; margin: 0 0 10px; padding: 0 12px; flex-shrink: 0;
+  border: 1px solid var(--panel-border); border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  transition: border-color .2s ease, background .2s ease;
+}
+.sSearch:focus-within { border-color: var(--color-accent); background: rgba(255,255,255,.06); }
+.sSearchIcon { font-size: 15px; color: var(--white-40); line-height: 1; }
+.sSearch input {
+  flex: 1; min-width: 0; height: 100%; padding: 0; margin: 0;
+  border: none; outline: none; background: transparent; -webkit-appearance: none; appearance: none;
+  color: #fff; font-size: 13px; letter-spacing: .02em; font-family: inherit;
+}
+.sSearch input::placeholder { color: var(--white-40); }
+.sSearch input::-webkit-search-cancel-button { display: none; }
+.sSearchClear {
+  flex: 0 0 auto; width: 20px; height: 20px; padding: 0;
+  display: none; align-items: center; justify-content: center;
+  border: none; border-radius: 50%; cursor: pointer;
+  background: var(--white-12); color: var(--white-80); font-size: 11px; line-height: 1;
+}
+.sSearchClear:hover { background: var(--white-22); color: #fff; }
+
+.sSearchResults { display: none; flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; scrollbar-width: none; }
+.sSearchResults::-webkit-scrollbar { width: 0; height: 0; }
+#settingsBox.searching .sSearchResults { display: block; }
+#settingsBox.searching .sBody { display: none; }
+
+.srItem {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 11px 12px; margin-bottom: 2px; border-radius: 10px;
+  border: 1px solid transparent; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.srItem:hover, .srItem:focus-visible { background: var(--white-08); border-color: var(--panel-border); outline: none; }
+.srName { font-size: 13px; color: var(--white-90); }
+.srPath { font-size: 11px; color: var(--white-45); white-space: nowrap; }
+.srEmpty { padding: 22px 4px; text-align: center; font-size: 12px; color: var(--white-50); }
+.searchHit { animation: searchPulse 1.8s ease; }
+@keyframes searchPulse {
+  0%, 100% { box-shadow: none; }
+  18%, 62% { box-shadow: 0 0 0 2px var(--color-accent-glow); }
+}
+@media (max-width: 520px) {
+  .sSearch { height: 36px; }
+  .srPath { display: none; }
+}
+

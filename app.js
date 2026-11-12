@@ -944,6 +944,146 @@
     });
   }
 
+  /* 清空搜索状态（关闭设置时也会调用） */
+  function resetSettingsSearch() {
+    const input = $('#settingsSearch');
+    const results = $('#sSearchResults');
+    const clearBtn = $('#settingsSearchClear');
+    if (input) input.value = '';
+    if (results) results.innerHTML = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (settingsBox) settingsBox.classList.remove('searching');
+  }
+
+  /* 设置搜索：跨分类查找设置项，点击结果直接跳到对应位置 */
+  function initSettingsSearch() {
+    const input = $('#settingsSearch');
+    const clearBtn = $('#settingsSearchClear');
+    const results = $('#sSearchResults');
+    if (!input || !results) return;
+
+    const tabName = (pane) => {
+      const id = pane.id.replace(/^tab-/, '');
+      const btn = document.querySelector('.sTabBtn[data-tab="' + id + '"]');
+      return btn ? btn.textContent.replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '').trim() : '';
+    };
+
+    function collect() {
+      const items = [];
+      document.querySelectorAll('.sTabPane').forEach((pane) => {
+        const tab = pane.id.replace(/^tab-/, '');
+        const tabTitle = tabName(pane);
+        pane.querySelectorAll('.toggleRow').forEach((row) => {
+          const nameEl = row.querySelector('.tName');
+          if (!nameEl) return;
+          const descEl = row.querySelector('.tDesc');
+          const group = row.closest('.sGroup');
+          const gLabel = group ? group.querySelector(':scope > .sLabel') : null;
+          const gText = gLabel ? gLabel.textContent.replace(/\s+/g, ' ').trim() : '';
+          items.push({
+            name: nameEl.textContent.trim(),
+            text: [nameEl.textContent, descEl ? descEl.textContent : '', gText, tabTitle].join(' '),
+            path: tabTitle + (gText ? ' · ' + gText : ''),
+            tab: tab, el: row
+          });
+        });
+        pane.querySelectorAll('.sGroup').forEach((g) => {
+          const label = g.querySelector(':scope > .sLabel');
+          if (!label) return;
+          // 滑块行（字号 / 间距 / 透明度）与「入口行」（字体 / 壁纸）都要能被搜到
+          const hasSize = !!g.querySelector('.sizeRow');
+          const entry = g.querySelector(':scope > .fontEntry');
+          if (!hasSize && !entry) return;
+          const curEl = entry ? entry.querySelector('.feCur') : null;
+          const curText = curEl ? curEl.textContent.replace(/\s+/g, ' ').trim() : '';
+          const parent = g.parentElement ? g.parentElement.closest('.sGroup') : null;
+          const pLabel = parent && parent !== g ? parent.querySelector(':scope > .sLabel') : null;
+          const pText = pLabel ? pLabel.textContent.replace(/\s+/g, ' ').trim() : '';
+          items.push({
+            name: label.textContent.replace(/\s+/g, ' ').trim(),
+            text: [label.textContent, pText, curText, tabTitle].join(' '),
+            path: tabTitle + (pText ? ' · ' + pText : ''),
+            tab: tab, el: g
+          });
+        });
+      });
+      return items;
+    }
+
+    function clearSearch() { resetSettingsSearch(); }
+
+    function go(item) {
+      clearSearch();
+      const btn = document.querySelector('.sTabBtn[data-tab="' + item.tab + '"]');
+      if (btn) btn.click();
+      // 目标可能被折叠（含祖先分组），逐层展开
+      let node = item.el;
+      while (node && node !== settingsBox) {
+        if (node.classList && node.classList.contains('sGroup') && node.classList.contains('collapsed')) {
+          const lb = node.querySelector(':scope > .sLabel');
+          if (lb) lb.click();
+        }
+        node = node.parentElement;
+      }
+      setTimeout(() => {
+        if (!item.el) return;
+        if (typeof item.el.scrollIntoView === 'function') {
+          item.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+        item.el.classList.add('searchHit');
+        setTimeout(() => item.el.classList.remove('searchHit'), 1800);
+      }, 80);
+    }
+
+    function render(raw) {
+      const q = raw.trim().toLowerCase();
+      if (!q) { clearSearch(); return; }
+      settingsBox.classList.add('searching');
+      if (clearBtn) clearBtn.style.display = 'flex';
+      const hits = collect().filter((it) => it.text.toLowerCase().includes(q));
+      results.innerHTML = '';
+      if (!hits.length) {
+        const empty = document.createElement('div');
+        empty.className = 'srEmpty';
+        empty.textContent = '没有找到相关设置，换个关键词试试';
+        results.appendChild(empty);
+        return;
+      }
+      hits.slice(0, 30).forEach((it) => {
+        const row = document.createElement('div');
+        row.className = 'srItem';
+        row.setAttribute('role', 'button');
+        row.setAttribute('tabindex', '0');
+        const n = document.createElement('span');
+        n.className = 'srName';
+        n.textContent = it.name;
+        const p = document.createElement('span');
+        p.className = 'srPath';
+        p.textContent = it.path;
+        row.appendChild(n); row.appendChild(p);
+        row.addEventListener('click', () => go(it));
+        row.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.code === 'Space') { e.preventDefault(); go(it); }
+        });
+        results.appendChild(row);
+      });
+    }
+
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('search', () => render(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault(); e.stopPropagation();
+        if (input.value) clearSearch(); else input.blur();
+      } else if (e.key === 'Enter') {
+        const first = results.querySelector('.srItem');
+        if (first) first.click();
+      }
+    });
+    if (clearBtn) clearBtn.addEventListener('click', clearSearch);
+    document.querySelectorAll('.sTabBtn').forEach((b) => b.addEventListener('click', clearSearch));
+  }
+
   function initSettingsTabs() {
     const tabBtns = document.querySelectorAll('.sTabBtn');
     tabBtns.forEach((btn) => {
@@ -1100,6 +1240,7 @@
   function closeSettings() {
     settingsEl.classList.remove('show');
     closeBgDetail();
+    resetSettingsSearch();
     const dpPopover = $('#datePickerPopover');
     if (dpPopover) dpPopover.classList.remove('show');
   }
@@ -1331,6 +1472,7 @@
   /* ===== 事件绑定 ===== */
   function bindEvents() {
     initGroupCollapse();
+    initSettingsSearch();
     document.querySelectorAll('.modeBtn').forEach((btn) => {
       btn.addEventListener('click', () => setMode(btn.dataset.mode));
     });

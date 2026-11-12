@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.4.1', () => assert.strictEqual(U.VERSION, '1.4.1'));
+check('版本号为 1.4.2', () => assert.strictEqual(U.VERSION, '1.4.2'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -122,6 +122,17 @@ check('目标倒计时配置集中在「日期待办」页', () => {
   assert.ok(!focusPane.includes('targetTitleInput'), '目标名称仍留在专注计时页');
   assert.ok(!focusPane.includes('swCountdown'), '倒计时开关仍留在专注计时页');
   assert.strictEqual((html.match(/id="swCountdown"/g) || []).length, 1, '倒计时开关重复');
+});
+
+check('设置搜索框存在且可跨分类跳转', () => {
+  const html = read('index.html');
+  const app = read('app.js');
+  assert.ok(html.includes('id="settingsSearch"'), '缺少搜索输入框');
+  assert.ok(html.includes('id="sSearchResults"'), '缺少搜索结果容器');
+  assert.ok(app.includes('function initSettingsSearch'), '缺少搜索逻辑');
+  assert.ok(app.includes("querySelectorAll('.sTabPane')"), '未跨分类收集设置项');
+  assert.ok(app.includes('scrollIntoView'), '搜索结果未定位到目标');
+  assert.ok(app.includes('function resetSettingsSearch'), '关闭设置未重置搜索');
 });
 
 check('秒数样式切换立即生效（v1.4.1 回归）', () => {
