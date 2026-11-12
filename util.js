@@ -15,7 +15,7 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
-  var VERSION = '1.3.3';
+  var VERSION = '1.3.4';
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
@@ -48,6 +48,7 @@
 
   /* ===== 计时状态机（纯函数） =====
    * 番茄钟：运行时用 endAt 绝对时间戳推导剩余秒；暂停时用冻结的 remaining。
+   * 正计时：baseElapsed + 本次运行的墙钟差，不用 setInterval 逐秒累加，后台节流不漂移。
    */
   function pomodoroRemaining(p, now) {
     if (!p) return 0;
@@ -55,6 +56,20 @@
       return Math.max(0, Math.ceil((p.endAt - now) / 1000));
     }
     return Math.max(0, Math.floor(p.remaining || 0));
+  }
+
+  function stopwatchElapsed(s, now) {
+    if (!s) return 0;
+    var base = Math.max(0, Math.floor(s.baseElapsed || 0));
+    if (s.isRunning) {
+      return Math.max(0, base + Math.floor((now - s.startedAt) / 1000));
+    }
+    return base;
+  }
+
+  function splitHMS(totalSec) {
+    var t = Math.max(0, Math.floor(totalSec || 0));
+    return { h: Math.floor(t / 3600), m: Math.floor((t % 3600) / 60), s: t % 60 };
   }
 
   /** 距目标日期的自然日天数：本地零点对齐，只按天计，过期按 0 处理 */
@@ -104,6 +119,8 @@
     addDays: addDays,
     clamp: clamp,
     pomodoroRemaining: pomodoroRemaining,
+    stopwatchElapsed: stopwatchElapsed,
+    splitHMS: splitHMS,
     daysUntil: daysUntil,
     formatDuration: formatDuration,
     recordSeconds: recordSeconds,

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自习模拟器 v1.3.3</title>
+<title>自习模拟器 v1.3.4</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -16,6 +16,7 @@
 <div id="modeBar" role="toolbar" aria-label="模式切换">
   <button class="modeBtn active" data-mode="clock" title="时钟（快捷键 1）">时钟</button>
   <button class="modeBtn" data-mode="pomodoro" title="番茄钟（快捷键 2）">番茄钟</button>
+  <button class="modeBtn" data-mode="stopwatch" title="正计时（快捷键 3）">正计时</button>
   <button class="modeZenBtn" id="modeZenBtn" title="禅意极简模式（快捷键 Z）">禅意</button>
 </div>
 
@@ -70,7 +71,7 @@
 <div id="settings" role="dialog" aria-modal="true" aria-label="模拟器设置">
   <div id="settingsBox">
     <div class="sHeader">
-      <h2>模拟器设置 <span class="ver">v1.3.3</span></h2>
+      <h2>模拟器设置 <span class="ver">v1.3.4</span></h2>
       <div class="sHeadBtns">
         <button class="sLink" id="obReopen">引导</button>
         <button class="sClose" id="sClose" aria-label="关闭设置">✕</button>
@@ -271,7 +272,7 @@
         <div class="sLabel">日期显示</div>
         <div class="toggles">
           <div class="toggleRow">
-            <div><div class="tName">显示秒数</div><div class="tDesc">关闭后仅显示 时:分</div></div>
+            <div><div class="tName">显示秒数</div><div class="tDesc">关闭后仅显示 时:分（正计时始终显示秒）</div></div>
             <label class="switch"><input type="checkbox" id="swSec" aria-label="显示秒数"><span class="slider"></span></label>
           </div>
           <div class="toggleRow">
@@ -401,8 +402,8 @@
 
     <div class="obGrid">
       <div class="obCard">
-        <div class="obCardTitle"><span class="obIcon">⏱</span> 两种模式与快捷键</div>
-        <div class="obCardDesc">按 <b>1 / 2</b> 键切换时钟与番茄钟；<b>空格</b> 启停番茄钟，<b>Z</b> 禅意极简，<b>F</b> 全屏沉浸，<b>Esc</b> 关闭浮窗。主界面始终显示大时钟，日期下方可选显示目标倒数天数。</div>
+        <div class="obCardTitle"><span class="obIcon">⏱</span> 三种模式与快捷键</div>
+        <div class="obCardDesc">按 <b>1 / 2 / 3</b> 键切换时钟、番茄钟与正计时；<b>空格</b> 启停计时，<b>Z</b> 禅意极简，<b>F</b> 全屏沉浸，<b>Esc</b> 关闭浮窗。主界面始终显示大时钟，日期下方可选显示目标倒数天数。</div>
       </div>
       <div class="obCard">
         <div class="obCardTitle"><span class="obIcon">🎧</span> 仿真白噪音 ＆ 细雨</div>

@@ -167,30 +167,42 @@
   const obsoleteFontMap = { orbitron: 'sharetech', cinzel: 'modern', dsd7: 'dseg7' };
   if (obsoleteFontMap[initialSettings.font]) initialSettings.font = obsoleteFontMap[initialSettings.font];
 
-  // v1.3.3：移除「倒数日」模式（它只负责隐藏时钟）；旧设置平滑回落到时钟，避免主界面空白
-  if (!['clock', 'pomodoro'].includes(initialSettings.mode)) initialSettings.mode = 'clock';
+  // v1.3.4：倒数日模式已移除，旧设置回落到时钟；正计时重新作为独立模式
+  if (!['clock', 'pomodoro', 'stopwatch'].includes(initialSettings.mode)) initialSettings.mode = 'clock';
 
   /* ===== 计时器持久化状态 ===== */
   function defaultTimers(workSec) {
-    return { status: 'work', remaining: workSec, endAt: 0, isRunning: false, rounds: 0, phaseTotal: workSec };
+    return {
+      pomodoro: { status: 'work', remaining: workSec, endAt: 0, isRunning: false, rounds: 0, phaseTotal: workSec },
+      stopwatch: { baseElapsed: 0, startedAt: 0, isRunning: false, archivedSeconds: 0, autoPaused: false }
+    };
   }
   function loadTimers() {
     const t = readJSON(TIMER_KEY, null);
     if (!t || typeof t !== 'object' || Array.isArray(t)) return null;
-    // 兼容 v1.3.0 的 { pomodoro, stopwatch } 结构；正计时数据直接忽略
-    const p = t.pomodoro || t;
+    // 兼容 v1.3.1~v1.3.3 的 { pomodoro } 结构、v1.3.0 的 { pomodoro, stopwatch } 与更早期扁平结构
+    const p = t.pomodoro || t, s = t.stopwatch || {};
     const workSec = (initialSettings.pomoWorkMin || 25) * 60;
     return {
-      status: p.status === 'break' ? 'break' : 'work',
-      remaining: U.clamp(p.remaining, 0, 7200, workSec),
-      endAt: Number.isFinite(Number(p.endAt)) ? Number(p.endAt) : 0,
-      isRunning: !!p.isRunning,
-      rounds: U.clamp(p.rounds, 0, 9999, 0),
-      phaseTotal: U.clamp(p.phaseTotal, 1, 7200, workSec)
+      pomodoro: {
+        status: p.status === 'break' ? 'break' : 'work',
+        remaining: U.clamp(p.remaining, 0, 7200, workSec),
+        endAt: Number.isFinite(Number(p.endAt)) ? Number(p.endAt) : 0,
+        isRunning: !!p.isRunning,
+        rounds: U.clamp(p.rounds, 0, 9999, 0),
+        phaseTotal: U.clamp(p.phaseTotal, 1, 7200, workSec)
+      },
+      stopwatch: {
+        baseElapsed: U.clamp(s.baseElapsed, 0, 864000, 0),
+        startedAt: Number.isFinite(Number(s.startedAt)) ? Number(s.startedAt) : 0,
+        isRunning: !!s.isRunning,
+        archivedSeconds: U.clamp(s.archivedSeconds, 0, 864000, 0),
+        autoPaused: !!s.autoPaused
+      }
     };
   }
   function saveTimers() {
-    writeJSON(TIMER_KEY, { pomodoro: state.pomodoro });
+    writeJSON(TIMER_KEY, { pomodoro: state.pomodoro, stopwatch: state.stopwatch });
   }
 
   /* ===== 专注记录待写队列（保证刷新 / 关闭不丢数据） ===== */
@@ -222,7 +234,8 @@
     todos: loadTodos(),
     customBgs: [],
     dbAvailable: true,
-    pomodoro: persisted,
+    pomodoro: persisted.pomodoro,
+    stopwatch: persisted.stopwatch,
     mottoIndex: 0,
     zenMode: false
   };
@@ -531,19 +544,21 @@
     // 日期与倒计时是主界面常驻信息，只由各自开关控制，不受计时模式影响
     elDate.style.display = state.settings.showDate ? '' : 'none';
     countdownLine.style.display = state.settings.showCountdown !== false ? '' : 'none';
-    elSecWrap.style.display = state.settings.showSec ? '' : 'none';
-    timerBadge.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
-    timerControls.style.display = m === 'pomodoro' ? 'flex' : 'none';
+    // 正计时以秒为主要信息，忽略「显示秒数」开关；其余模式尊重开关
+    elSecWrap.style.display = (state.settings.showSec || m === 'stopwatch') ? '' : 'none';
+    timerBadge.style.display = (m === 'pomodoro' || m === 'stopwatch') ? 'inline-flex' : 'none';
+    timerControls.style.display = (m === 'pomodoro' || m === 'stopwatch') ? 'flex' : 'none';
     timerSkipBtn.style.display = m === 'pomodoro' ? 'inline-flex' : 'none';
     renderCountdownLine();
     syncGhostSeconds();
     if (m === 'pomodoro') updatePomoBadge();
+    else if (m === 'stopwatch') { timerBadge.className = ''; timerBadge.textContent = '正向专注计时'; }
     updateTimerControls();
     applyClockSize();
   }
 
   function setMode(mode, silent) {
-    if (!['clock', 'pomodoro'].includes(mode)) mode = 'clock';
+    if (!['clock', 'pomodoro', 'stopwatch'].includes(mode)) mode = 'clock';
     state.settings.mode = mode;
     saveSettings();
     document.querySelectorAll('.modeBtn').forEach((btn) => {
@@ -555,8 +570,10 @@
   }
 
   function renderCurrentMode() {
-    // 时钟模式显示实时时间，番茄钟模式显示本阶段剩余时间；两种情况大时钟都在
-    if (state.settings.mode === 'pomodoro') renderPomodoroTime();
+    // 时钟模式显示实时时间，番茄钟显示剩余时间，正计时显示累计时长；三种情况大时钟都在
+    const m = state.settings.mode;
+    if (m === 'pomodoro') renderPomodoroTime();
+    else if (m === 'stopwatch') renderStopwatchTime();
     else renderClockTime();
   }
 
@@ -593,6 +610,7 @@
     const rem = U.pomodoroRemaining(state.pomodoro, Date.now());
     elTH.textContent = pad(Math.floor(rem / 60));
     elTM.textContent = pad(rem % 60);
+    elTS.textContent = '00'; // 从正计时切回时清掉残留秒数
   }
   function togglePomodoro() {
     if (state.pomodoro.isRunning) pausePomodoro(); else startPomodoro();
@@ -647,6 +665,42 @@
     switchPomodoroStage(true); // 跳过不归档、不计轮数
   }
 
+  /* ===== 正计时（绝对时间戳，不逐秒累加） ===== */
+  function currentStopwatchSeconds() { return U.stopwatchElapsed(state.stopwatch, Date.now()); }
+  function renderStopwatchTime() {
+    const t = U.splitHMS(currentStopwatchSeconds());
+    elTH.textContent = pad(t.h);
+    elTM.textContent = pad(t.m);
+    elTS.textContent = pad(t.s);
+  }
+  function toggleStopwatch() {
+    if (state.stopwatch.isRunning) pauseStopwatch(); else startStopwatch();
+    updateTimerControls();
+  }
+  function startStopwatch() {
+    const s = state.stopwatch;
+    if (s.isRunning) return;
+    s.startedAt = Date.now(); s.isRunning = true; s.autoPaused = false;
+    saveTimers();
+    if (window.StudySound && state.settings.soundEnabled) window.StudySound.playSoftTick();
+    updateTimerControls();
+  }
+  function pauseStopwatch() {
+    const s = state.stopwatch;
+    if (s.isRunning) s.baseElapsed = currentStopwatchSeconds();
+    s.isRunning = false; s.startedAt = 0;
+    saveTimers(); updateTimerControls();
+  }
+  function resetStopwatch() {
+    const s = state.stopwatch;
+    const total = currentStopwatchSeconds();
+    const delta = Math.max(0, total - (s.archivedSeconds || 0));
+    if (delta >= 60) recordFocus('stopwatch', delta);
+    s.isRunning = false; s.startedAt = 0; s.baseElapsed = 0;
+    s.archivedSeconds = 0; s.autoPaused = false;
+    saveTimers(); renderCurrentMode(); updateTimerControls();
+  }
+
   /* ===== 目标倒数日：主界面一行文字，只按天计 ===== */
   function renderCountdownLine() {
     const days = U.daysUntil(state.settings.targetDate);
@@ -655,9 +709,16 @@
   }
 
   function updateTimerControls() {
-    if (state.settings.mode !== 'pomodoro') return;
-    timerToggleBtn.textContent = state.pomodoro.isRunning ? '⏸ 暂停' : '▶ 开始专注';
-    timerToggleBtn.classList.toggle('primary', !state.pomodoro.isRunning);
+    const m = state.settings.mode;
+    if (m === 'pomodoro') {
+      timerToggleBtn.textContent = state.pomodoro.isRunning ? '⏸ 暂停' : '▶ 开始专注';
+      timerToggleBtn.classList.toggle('primary', !state.pomodoro.isRunning);
+    } else if (m === 'stopwatch') {
+      timerToggleBtn.textContent = state.stopwatch.isRunning
+        ? '⏸ 暂停'
+        : (state.stopwatch.autoPaused ? '▶ 继续计时' : '▶ 开始计时');
+      timerToggleBtn.classList.toggle('primary', !state.stopwatch.isRunning);
+    }
   }
 
   /* ===== 单一心跳（对齐整秒，渲染只在这里发生） ===== */
@@ -689,6 +750,18 @@
     flushPendingRecords();
   }
   function onPageHide() {
+    const now = Date.now();
+    const s = state.stopwatch;
+    const total = U.stopwatchElapsed(s, now);
+    if (s.isRunning) {
+      s.baseElapsed = total; s.isRunning = false; s.startedAt = 0; s.autoPaused = true;
+    }
+    const delta = Math.max(0, total - (s.archivedSeconds || 0));
+    if (delta >= 60) {
+      // 自动归档未结算的专注时长，进入待写队列，下次启动补写
+      queuePendingRecord('stopwatch', delta, now);
+      s.archivedSeconds = total;
+    }
     saveTimers();
   }
 
@@ -1119,12 +1192,14 @@
       if (e.code === 'Space') {
         e.preventDefault();
         if (state.settings.mode === 'pomodoro') togglePomodoro();
+        if (state.settings.mode === 'stopwatch') toggleStopwatch();
       } else if (e.key === 'z' || e.key === 'Z') {
         toggleZenMode();
       } else if (e.key === 'f' || e.key === 'F') {
         fsBtn.click();
       } else if (e.key === '1') { setMode('clock'); }
       else if (e.key === '2') { setMode('pomodoro'); }
+      else if (e.key === '3') { setMode('stopwatch'); }
     });
   }
 
@@ -1139,9 +1214,11 @@
 
     timerToggleBtn.addEventListener('click', () => {
       if (state.settings.mode === 'pomodoro') togglePomodoro();
+      if (state.settings.mode === 'stopwatch') toggleStopwatch();
     });
     timerResetBtn.addEventListener('click', () => {
       if (state.settings.mode === 'pomodoro') resetPomodoro();
+      if (state.settings.mode === 'stopwatch') resetStopwatch();
     });
     timerSkipBtn.addEventListener('click', skipPomodoroStage);
     if (mottoWrap) mottoWrap.addEventListener('click', showNextMotto);
