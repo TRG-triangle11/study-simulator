@@ -5,16 +5,12 @@
 @font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
-@font-face { font-family: 'DSEG7 Modern'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/dseg7-modern-700.woff2') format('woff2'); }
-@font-face { font-family: 'DSEG7 Modern'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/dseg7-modern-700.woff2') format('woff2'); }
-@font-face { font-family: 'Share Tech Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/share-tech-mono-400.woff2') format('woff2'); }
-@font-face { font-family: 'Share Tech Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/share-tech-mono-400.woff2') format('woff2'); }
+@font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 700; font-display: block; src: url('assets/fonts/dseg7-classic-700.woff2') format('woff2'); }
 @font-face { font-family: 'Space Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/space-mono-700.woff2') format('woff2'); }
 @font-face { font-family: 'Space Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/space-mono-700.woff2') format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
-@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/roboto-mono-700.woff2') format('woff2'); }
-@font-face { font-family: 'Roboto Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/roboto-mono-700.woff2') format('woff2'); }
 @font-face { font-family: 'Outfit'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/outfit-700.woff2') format('woff2'); }
 @font-face { font-family: 'Outfit'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/outfit-700.woff2') format('woff2'); }
 
@@ -349,6 +345,24 @@ body {
 .fdBtn.apply:hover { filter: brightness(1.1) }
 .fdBtn.back { background: var(--white-10); color: #fff }
 .fdBtn.back:hover { background: var(--white-18) }
+
+/* ===== 背景壁纸浮窗（与字体浮窗同一套版式） ===== */
+#bgDetail {
+  display: none; position: fixed; inset: 0; z-index: 12;
+  align-items: center; justify-content: center; background: rgba(0,0,0,.5);
+}
+#bgDetail.show { display: flex }
+#bgDetailBox {
+  width: 640px; max-width: 92vw;
+  background: var(--panel-bg-deep); backdrop-filter: var(--panel-blur);
+  border: 1px solid var(--panel-border); border-radius: var(--panel-radius);
+  padding: 24px 26px; box-shadow: var(--panel-shadow);
+  max-height: 88vh; overflow-y: auto; scrollbar-width: none;
+}
+#bgDetailBox::-webkit-scrollbar { width: 0; height: 0; display: none }
+#bgDetailBox .fdLabel { font-size: 13px; letter-spacing: .08em; color: var(--white-60); margin-bottom: 12px }
+#bgDetailBox .bgGrid { margin-bottom: 12px }
+#bgDetailBox .fdBtns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px }
 
 /* 字号滑块 */
 .sizeRow { display: flex; align-items: center; gap: 14px }
@@ -1165,4 +1179,44 @@ input, textarea {
 #time.segment #timeGhost { display: flex; }
 #timeGhost .unit, #timeGhost .sec-wrap, #timeGhost .sep { opacity: 1; }
 #time > span, #time > .sec-wrap { position: relative; z-index: 1; }
+
+/* ===== v1.4.0 ===== */
+
+/* 名句水平居中（此前只设了 max-width，父容器较宽时贴左） */
+#mottoWrap { margin-left: auto; margin-right: auto; }
+
+/* 设置分组折叠：次级标题前的小三角 */
+.sLabel.sLabelToggle { cursor: pointer; user-select: none; }
+.sLabel .sCaret {
+  display: inline-block; width: 10px; font-size: 10px; opacity: .55;
+  transition: transform .18s ease;
+}
+.sLabelToggle:hover { color: var(--white-85); }
+.sGroup.collapsed > *:not(.sLabel) { display: none !important; }
+.sGroup.collapsed { margin-bottom: 12px; }
+
+/* 嵌套小分组（日期字号 / 字间距 / 待办字号与透明度）间距收紧 */
+.toggles .sGroup { margin-top: 12px !important; margin-bottom: 0 !important; }
+
+/* 目标名称 / 目标日期：窄宽度下改为上下排列，控件保持一行不换行 */
+.dateSettingRow { flex-direction: column; align-items: flex-start; gap: 10px; }
+.dateSettingRow > div:first-child { width: 100%; }
+.dateAdjustRow { flex-wrap: nowrap; gap: 6px; }
+.dateAdjustRow .numStepper.sm .nsInput.sm { width: 40px; }
+.dateAdjustRow .customDateWrap { margin-left: 2px; }
+.dateAdjustRow .calPopBtn { width: 32px; height: 32px; }
+
+/* 数码管：翻页框开启时，暗段与亮段使用相同的内边距 / 边框占位，逐位对齐 */
+#time.flip #timeGhost .g {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: .22em .18em; margin: 0 .02em;
+  border: 1px solid transparent; border-radius: .12em;
+}
+/* 数码管整体轻微收窄，接近真实七段管的竖长比例 */
+#time.segment { transform: scaleX(.94); transform-origin: center; }
+
+/* 小屏壁纸浮窗改为三列，避免缩略图过小 */
+@media (max-width: 520px) {
+  #bgDetailBox .bgGrid { grid-template-columns: repeat(3, 1fr); }
+}
 

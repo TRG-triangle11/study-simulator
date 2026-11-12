@@ -39,50 +39,113 @@
   /* ===== 字体方案 ===== */
   const FONTS = [
     { id: 'modern',     name: '现代无衬线 (HarmonyOS)',    css: '"HarmonyOS Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif', sample: '12:34:56' },
-    { id: 'dseg7',      name: '数码管 (DSEG7 Modern)',     css: '"DSEG7 Modern", "Consolas", monospace', sample: '12:34:56', segment: true },
-    { id: 'sharetech',  name: '屏显等宽 (Share Tech Mono)', css: '"Share Tech Mono", "Consolas", monospace', sample: '12:34:56' },
+    { id: 'dseg7',      name: '数码管 (DSEG7 Classic)',    css: '"DSEG7 Classic", "Consolas", monospace', sample: '12:34:56', segment: true },
     { id: 'spacemono',  name: '几何等宽 (Space Mono)',      css: '"Space Mono", "Consolas", monospace', sample: '12:34:56' },
     { id: 'plexmono',   name: '工业等宽 (IBM Plex Mono)',   css: '"IBM Plex Mono", "Consolas", monospace', sample: '12:34:56' },
-    { id: 'robotomono', name: '简洁等宽 (Roboto Mono)',     css: '"Roboto Mono", "Consolas", monospace', sample: '12:34:56' },
     { id: 'outfit',     name: '圆润数字 (Outfit)',          css: '"Outfit", "Segoe UI", sans-serif', sample: '12:34:56' }
   ];
 
   /* ===== 励志/专注寄语 ===== */
   const MOTTO_LIST = [
     "追光的人，终会万丈光芒。",
-    "耐得住寂寞，才守得住繁华。",
     "星光不问赶路人，时光不负有心人。",
     "行远自迩，笃行不怠。",
+    "不积跬步，无以至千里。",
+    "千里之行，始于足下。",
+    "宁静致远，淡泊明志。",
+    "博观而约取，厚积而薄发。",
+    "读书百遍，其义自见。",
+    "业精于勤荒于嬉。",
+    "行百里者半九十。",
+    "锲而不舍，金石可镂。",
+    "精诚所至，金石为开。",
+    "工欲善其事，必先利其器。",
+    "天行健，君子以自强不息。",
+    "地势坤，君子以厚德载物。",
+    "苟日新，日日新，又日新。",
+    "士不可以不弘毅，任重而道远。",
+    "君子藏器于身，待时而动。",
+    "路漫漫其修远兮，吾将上下而求索。",
+    "知之者不如好之者，好之者不如乐之者。",
+    "莫道桑榆晚，为霞尚满天。",
+    "悟已往之不谏，知来者之可追。",
+    "少壮不努力，老大徒伤悲。",
+    "及时当勉励，岁月不待人。",
+    "盛年不重来，一日难再晨。",
+    "一寸光阴一寸金。",
+    "莫等闲，白了少年头，空悲切。",
+    "三更灯火五更鸡，正是男儿读书时。",
+    "黑发不知勤学早，白首方悔读书迟。",
+    "学如逆水行舟，不进则退。",
+    "宝剑锋从磨砺出，梅花香自苦寒来。",
+    "长风破浪会有时，直挂云帆济沧海。",
+    "会当凌绝顶，一览众山小。",
+    "天生我材必有用。",
+    "山重水复疑无路，柳暗花明又一村。",
+    "沉舟侧畔千帆过，病树前头万木春。",
+    "千磨万击还坚劲，任尔东西南北风。",
+    "文章千古事，得失寸心知。",
+    "腹有诗书气自华。",
+    "问渠那得清如许，为有源头活水来。",
+    "纸上得来终觉浅，绝知此事要躬行。",
+    "高山仰止，景行行止。",
+    "心之所向，素履以往。",
+    "念念不忘，必有回响。",
     "书山有路勤为径，学海无涯苦作舟。",
+    "少年何妨梦摘星，敢挽桑弓射玉衡。",
+    "追风赶月莫停留，平芜尽处是春山。",
+    "乾坤未定，你我皆是黑马。",
+    "凡是过往，皆为序章。",
+    "愿你历尽千帆，归来仍是少年。",
     "每一个专注的当下，都在构筑未来的你。",
     "保持热爱，奔赴山海。",
-    "宁静致远，淡泊明志。",
     "心有所向，日复一日，必有精进。",
     "沉下心来，把一件事做到极致。",
     "慢慢来，谁不是翻山越岭去相见。",
     "种一棵树最好的时间是十年前，其次是现在。",
-    "不积跬步，无以至千里。",
-    "追风赶月莫停留，平芜尽处是春山。",
-    "答案在路上，自由在风里。",
-    "乾坤未定，你我皆是黑马。",
     "坚持很难，但放弃会更遗憾。",
     "既然选择了远方，便只顾风雨兼程。",
-    "少年何妨梦摘星，敢挽桑弓射玉衡。",
-    "愿你历尽千帆，归来仍是少年。",
-    "凡是过往，皆为序章。",
-    "莫道桑榆晚，为霞尚满天。",
-    "业精于勤荒于嬉，行成于思毁于随。",
-    "行百里者半九十，越接近成功越需坚持。",
-    "每一个不曾起舞的日子，都是对生命的辜负。",
-    "悟已往之不谏，知来者之可追。",
-    "博观而约取，厚积而薄发。",
+    "答案在路上，自由在风里。",
     "自律是通往自由的唯一途径。",
     "日拱一卒无懈怠，功不唐捐终成器。",
-    "生活的泥沙俱下，但依然要奔赴山海。",
     "今日事今日毕，莫把光阴空蹉跎。",
     "远方有灯，脚下有路，眼前有光。",
     "专注当下，不负韶华。",
-    "读书百遍，其义自见。",
+    "每一个不曾起舞的日子，都是对生命的辜负。",
+    "耐得住寂寞，才守得住繁华。",
+    "与其临渊羡鱼，不如退而结网。",
+    "你只管努力，剩下的交给时间。",
+    "把今天过好，明天自然不会差。",
+    "你走过的每一步，都算数。",
+    "别怕走得慢，只怕站着不动。",
+    "认真的人，运气不会太差。",
+    "所有的自律，都是在给未来铺路。",
+    "安静地变强，是给自己最好的礼物。",
+    "把喜欢的事做到极致，就是天赋。",
+    "心若有所向往，何惧道阻且长。",
+    "今天多学一点，明天就多一份底气。",
+    "所有伟大，都源于一个勇敢的开始。",
+    "与其抱怨黑暗，不如点亮蜡烛。",
+    "光会照进来，只要你把窗打开。",
+    "我思故我在。—— 笛卡尔",
+    "人是一根会思想的芦苇。—— 帕斯卡",
+    "知识就是力量。—— 培根",
+    "凡不能杀死我的，必使我更强大。—— 尼采",
+    "知道自己为什么而活，就能忍受任何一种生活。—— 尼采",
+    "想到达高处，就用自己的双腿。—— 尼采",
+    "最重要的不是位置，而是方向。—— 霍姆斯",
+    "你的时间有限，不要为别人而活。—— 乔布斯",
+    "求知若饥，虚心若愚。—— 乔布斯",
+    "天才是一分灵感加九十九分汗水。—— 爱迪生",
+    "世上只有一种英雄主义，是看清生活后仍热爱它。—— 罗曼·罗兰",
+    "冬天来了，春天还会远吗？—— 雪莱",
+    "我们都在阴沟里，但仍有人仰望星空。—— 王尔德",
+    "生命不止，奋斗不息。—— 卡莱尔",
+    "梦想还是要有的，万一实现了呢。",
+    "慢一点没关系，方向对就好。",
+    "今天比昨天好，就是希望。",
+    "热爱可抵岁月漫长。",
+    "你若盛开，清风自来。",
     "越努力，越幸运。",
     "没有一朵花，从一开始就是花。",
     "山高自有客行路，水深自有渡船人。",
@@ -96,11 +159,8 @@
     "聚沙成塔，集腋成裘。",
     "把普通的每一天过得热气腾腾。",
     "流年不负，岁月可期。",
-    "默默努力，悄悄拔尖。",
-    "心之所向，无问西东。",
-    "纵有疾风起，人生不言弃。",
-    "一步一个脚印，终能踏上顶峰。",
-    "流水不争先，争的是滔滔不绝。"
+    "星光会照亮赶路的人。",
+    "静下心来，听见自己成长的声音。",
   ];
 
   /* ===== 持久化 ===== */
@@ -164,7 +224,11 @@
   if (obsoleteBgMap[initialSettings.bg]) initialSettings.bg = obsoleteBgMap[initialSettings.bg];
 
   // v1.3.2 字体方案变更：让旧设置平滑迁移，不出现「选中项为空」
-  const obsoleteFontMap = { orbitron: 'sharetech', cinzel: 'modern', dsd7: 'dseg7' };
+  // v1.4.0 再次精简字体：屏显等宽、简洁等宽已移除，旧设置迁移到相近的等宽方案
+  const obsoleteFontMap = {
+    orbitron: 'spacemono', cinzel: 'modern', dsd7: 'dseg7',
+    sharetech: 'spacemono', robotomono: 'plexmono', dsegmodern: 'dseg7'
+  };
   if (obsoleteFontMap[initialSettings.font]) initialSettings.font = obsoleteFontMap[initialSettings.font];
 
   // v1.3.4：倒数日模式已移除，旧设置回落到时钟；正计时重新作为独立模式
@@ -350,13 +414,18 @@
           if (url) entry.target.style.backgroundImage = `url("${url}")`;
           lazyObserver.unobserve(entry.target);
         });
-      }, { root: document.querySelector('.sBody') || null });
+      }, { root: document.querySelector('#bgDetailBox') || null });
     }
 
     const customCards = (state.customBgs || []).map((b) => ({
       id: b.id, name: '自定义', url: b.url, custom: true, objectUrl: b.objectUrl
     }));
     const all = customCards.concat(DEFAULT_BGS);
+
+    // 入口行显示当前壁纸名称
+    const curBg = all.find((b) => b.id === state.settings.bg);
+    const curNameEl = $('#bgCurName');
+    if (curNameEl) curNameEl.textContent = curBg ? (curBg.custom ? '自定义壁纸' : curBg.name) : '默认壁纸';
 
     all.forEach((b) => {
       const div = document.createElement('div');
@@ -502,6 +571,15 @@
   }
   function openFontDetail() { buildFdGrid(); if (fontDetail) fontDetail.classList.add('show'); }
   function closeFontDetail() { if (fontDetail) fontDetail.classList.remove('show'); }
+  function openBgDetail() {
+    buildBgGrid();
+    const el = $('#bgDetail');
+    if (el) el.classList.add('show');
+  }
+  function closeBgDetail() {
+    const el = $('#bgDetail');
+    if (el) el.classList.remove('show');
+  }
   function applyFlip() { elTime.classList.toggle('flip', !!state.settings.flip); }
 
   /* ===== 字号（监听器只绑定一次） ===== */
@@ -786,7 +864,7 @@
   function toggleZenMode() {
     state.zenMode = !state.zenMode;
     document.body.classList.toggle('zen-mode', state.zenMode);
-    if (state.zenMode) { closeSettings(); closeFontDetail(); }
+    if (state.zenMode) { closeSettings(); closeFontDetail(); closeBgDetail(); }
     if (!state.zenMode && zenExitBtn) zenExitBtn.classList.remove('show');
   }
 
@@ -811,12 +889,59 @@
   function applySecStyle() {
     const segment = isSegmentFont();
     elTime.classList.toggle('segment', segment);
-    // 七段数码下让秒与主数字等大，暗段底层才能精确对齐
-    elTime.classList.toggle('sec-eq', segment || state.settings.secStyle === 'equal');
+    // 紧凑 / 等大完全由用户选择决定（数码管也遵循，暗段同比缩放仍对齐）
+    elTime.classList.toggle('sec-eq', state.settings.secStyle === 'equal');
     syncGhostSeconds();
   }
 
+  /* 秒数样式三选一：紧凑 / 等大 / 关闭 */
+  function syncSecStyleButtons() {
+    const opt = state.settings.showSec === false ? 'off' : (state.settings.secStyle || 'compact');
+    document.querySelectorAll('#secStyleOpts .posOpt').forEach((b) => {
+      b.classList.toggle('active', b.dataset.sec === opt);
+    });
+  }
+
+  /* 字体预加载：避免切换字体时先回退再替换造成的闪烁 */
+  function preloadFonts() {
+    if (!document.fonts || typeof document.fonts.load !== 'function') return;
+    FONTS.forEach((fn) => {
+      try {
+        const p = document.fonts.load('700 120px ' + fn.css, '0123456789:');
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      } catch (e) {}
+    });
+  }
+
   /* ===== 设置弹窗 ===== */
+  /* 次级标题折叠：每个分组标题前加小三角，点击收起 / 展开 */
+  function initGroupCollapse() {
+    const box = settingsBox;
+    if (!box || typeof box.querySelectorAll !== 'function') return;
+    box.querySelectorAll('.sGroup').forEach((group) => {
+      const label = group.querySelector(':scope > .sLabel');
+      if (!label || label.querySelector('.sCaret')) return;
+      const caret = document.createElement('span');
+      caret.className = 'sCaret';
+      caret.setAttribute('aria-hidden', 'true');
+      caret.textContent = '▾';
+      label.insertBefore(caret, label.firstChild);
+      label.classList.add('sLabelToggle');
+      label.setAttribute('role', 'button');
+      label.setAttribute('tabindex', '0');
+      const toggle = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        const collapsed = group.classList.toggle('collapsed');
+        caret.textContent = collapsed ? '▸' : '▾';
+        label.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      };
+      label.addEventListener('click', toggle);
+      label.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.code === 'Space') toggle(e);
+      });
+    });
+  }
+
   function initSettingsTabs() {
     const tabBtns = document.querySelectorAll('.sTabBtn');
     tabBtns.forEach((btn) => {
@@ -924,7 +1049,6 @@
 
   function refreshSettings() {
     applyBg(); applyFont(); syncSize(); buildBgGrid(); buildFonts();
-    $('#swSec').checked = !!state.settings.showSec;
     $('#swDate').checked = !!state.settings.showDate;
     $('#swYear').checked = !!state.settings.showYear;
     $('#swMonthDay').checked = !!state.settings.showMonthDay;
@@ -964,9 +1088,7 @@
     if ($('#dimVal')) $('#dimVal').textContent = Math.round(dim * 100) + '%';
     if ($('#dimOut')) $('#dimOut').textContent = Math.round(dim * 100);
 
-    document.querySelectorAll('#secStyleOpts .posOpt').forEach((b) => {
-      b.classList.toggle('active', b.dataset.sec === state.settings.secStyle);
-    });
+    syncSecStyleButtons();
     applySecStyle(); applyFlip();
     renderRemind('L'); renderRemind('R');
     applyDate(); applyMottoSetting(); updateVisibility(); updateDbHint();
@@ -975,6 +1097,7 @@
   function openSettings() { refreshSettings(); settingsEl.classList.add('show'); }
   function closeSettings() {
     settingsEl.classList.remove('show');
+    closeBgDetail();
     const dpPopover = $('#datePickerPopover');
     if (dpPopover) dpPopover.classList.remove('show');
   }
@@ -1183,7 +1306,7 @@
       // Esc 始终生效（输入框内也能关闭浮层 / 退出禅意）
       if (e.key === 'Escape') {
         if (state.zenMode) toggleZenMode();
-        closeSettings(); closeFontDetail();
+        closeSettings(); closeFontDetail(); closeBgDetail();
         const pop = $('#datePickerPopover');
         if (pop) pop.classList.remove('show');
         return;
@@ -1205,6 +1328,7 @@
 
   /* ===== 事件绑定 ===== */
   function bindEvents() {
+    initGroupCollapse();
     document.querySelectorAll('.modeBtn').forEach((btn) => {
       btn.addEventListener('click', () => setMode(btn.dataset.mode));
     });
@@ -1236,9 +1360,6 @@
       if (e.target === settingsEl) closeSettings();
     });
 
-    $('#swSec').addEventListener('change', function () {
-      state.settings.showSec = this.checked; saveSettings(); applyDate();
-    });
     $('#swDate').addEventListener('change', function () {
       state.settings.showDate = this.checked; saveSettings(); refreshSettings();
     });
@@ -1381,10 +1502,16 @@
 
     document.querySelectorAll('#secStyleOpts .posOpt').forEach((b) => {
       b.addEventListener('click', function () {
-        state.settings.secStyle = this.dataset.sec; saveSettings(); applySecStyle();
-        document.querySelectorAll('#secStyleOpts .posOpt').forEach((x) => {
-          x.classList.toggle('active', x.dataset.sec === state.settings.secStyle);
-        });
+        const v = this.dataset.sec;
+        if (v === 'off') {
+          state.settings.showSec = false;
+        } else {
+          state.settings.showSec = true;
+          state.settings.secStyle = v;
+        }
+        saveSettings();
+        syncSecStyleButtons();
+        updateVisibility();
       });
     });
 
@@ -1395,6 +1522,19 @@
     });
     $('#fdBack').addEventListener('click', closeFontDetail);
     fontDetail.addEventListener('click', (e) => { if (e.target === fontDetail) closeFontDetail(); });
+
+    const bgEntryEl = $('#bgEntry');
+    if (bgEntryEl) {
+      bgEntryEl.addEventListener('click', openBgDetail);
+      bgEntryEl.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.code !== 'Space') return;
+        e.preventDefault(); e.stopPropagation(); openBgDetail();
+      });
+    }
+    const bgBackEl = $('#bgBack');
+    if (bgBackEl) bgBackEl.addEventListener('click', closeBgDetail);
+    const bgDetailEl = $('#bgDetail');
+    if (bgDetailEl) bgDetailEl.addEventListener('click', (e) => { if (e.target === bgDetailEl) closeBgDetail(); });
 
     bindZone(zoneL, 'L'); bindZone(zoneR, 'R');
     bindAdd('L'); bindAdd('R');
@@ -1713,6 +1853,7 @@
     setupOnboard();
     bindSizeControl();
 
+    preloadFonts();
     applyFont(); syncSize(); applyFlip(); applySecStyle();
     applyDate(); applyMottoSetting(); renderTodos();
     hydrateTimers();

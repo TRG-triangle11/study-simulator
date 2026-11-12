@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自习模拟器 v1.3.4</title>
+<title>自习模拟器 v1.4.0</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -29,7 +29,7 @@
     <div id="timerBadge" style="display:none">专注中</div>
     <div id="date"></div>
     <div id="countdownLine"></div>
-    <div id="time"><div id="timeGhost" aria-hidden="true"><span>88</span><span class="sep unit">:</span><span>88</span><span class="sec-wrap"><span class="sep">:</span><span>88</span></span></div><span id="tH">00</span><span class="sep unit">:</span><span id="tM">00</span><span class="sec-wrap"><span class="sep">:</span><span id="tS">00</span></span></div>
+    <div id="time"><div id="timeGhost" aria-hidden="true"><span class="g">88</span><span class="sep unit">:</span><span class="g">88</span><span class="sec-wrap"><span class="sep">:</span><span class="g">88</span></span></div><span id="tH">00</span><span class="sep unit">:</span><span id="tM">00</span><span class="sec-wrap"><span class="sep">:</span><span id="tS">00</span></span></div>
 
     <!-- 计时器专属控制栏 -->
     <div id="timerControls" style="display:none">
@@ -71,7 +71,7 @@
 <div id="settings" role="dialog" aria-modal="true" aria-label="模拟器设置">
   <div id="settingsBox">
     <div class="sHeader">
-      <h2>模拟器设置 <span class="ver">v1.3.4</span></h2>
+      <h2>模拟器设置 <span class="ver">v1.4.0</span></h2>
       <div class="sHeadBtns">
         <button class="sLink" id="obReopen">引导</button>
         <button class="sClose" id="sClose" aria-label="关闭设置">✕</button>
@@ -109,9 +109,10 @@
 
       <div class="sGroup">
         <div class="sLabel">背景壁纸</div>
-        <div class="bgGrid" id="bgGrid"></div>
-        <div class="miniHint">自定义壁纸会压缩后存入本地数据库，避免占用过多空间</div>
-        <div id="dbHint" class="miniHint dbHint" style="display:none"></div>
+        <div class="fontEntry" id="bgEntry" role="button" tabindex="0" aria-label="选择背景壁纸">
+          <span class="feName">选择壁纸</span>
+          <span class="feCur">当前：<b id="bgCurName">书桌·晴天·写实</b><span class="feArrow">›</span></span>
+        </div>
       </div>
 
       <div class="sGroup">
@@ -159,11 +160,12 @@
         <div class="sLabel">时钟样式选项</div>
         <div class="toggles">
           <div class="toggleRow">
-            <div><div class="tName">秒数样式</div><div class="tDesc">紧凑 或 等大</div></div>
+            <div><div class="tName">秒数样式</div><div class="tDesc">紧凑 / 等大 / 关闭（正计时始终带秒）</div></div>
           </div>
           <div class="posOpts" id="secStyleOpts">
             <button class="posOpt" data-sec="compact">紧凑</button>
             <button class="posOpt" data-sec="equal">等大</button>
+            <button class="posOpt" data-sec="off">关闭</button>
           </div>
           <div class="toggleRow" style="margin-top:14px">
             <div><div class="tName">翻页时钟框</div><div class="tDesc">仿真透明翻页立体卡片小方框</div></div>
@@ -220,11 +222,11 @@
             <label class="switch"><input type="checkbox" id="swCountdown" checked aria-label="显示目标倒计时"><span class="slider"></span></label>
           </div>
           <div class="toggleRow">
-            <div><div class="tName">目标名称</div><div class="tDesc">如：距离 高考 还有（自动补天数）</div></div>
+            <div><div class="tName">目标名称</div><div class="tDesc">例如：距离 高考 还有</div></div>
             <input type="text" id="targetTitleInput" placeholder="输入倒数标题" aria-label="倒数目标名称" style="width:160px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff">
           </div>
           <div class="toggleRow dateSettingRow">
-            <div><div class="tName">目标日期</div><div class="tDesc">倒计时截止日期（支持上下键调节或点击日历）</div></div>
+            <div><div class="tName">目标日期</div></div>
             <div class="dateAdjustRow">
               <div class="datePart">
                 <div class="numStepper sm">
@@ -271,10 +273,6 @@
       <div class="sGroup">
         <div class="sLabel">日期显示</div>
         <div class="toggles">
-          <div class="toggleRow">
-            <div><div class="tName">显示秒数</div><div class="tDesc">关闭后仅显示 时:分（正计时始终显示秒）</div></div>
-            <label class="switch"><input type="checkbox" id="swSec" aria-label="显示秒数"><span class="slider"></span></label>
-          </div>
           <div class="toggleRow">
             <div><div class="tName">显示日期栏</div><div class="tDesc">控制时钟上方日期是否显示</div></div>
             <label class="switch"><input type="checkbox" id="swDate" aria-label="显示日期栏"><span class="slider"></span></label>
@@ -432,6 +430,19 @@
     <div class="fdGrid" id="fdGrid"></div>
     <div class="fdBtns">
       <button class="fdBtn back" id="fdBack">返回</button>
+    </div>
+  </div>
+</div>
+
+<!-- 背景壁纸选择浮窗 -->
+<div id="bgDetail" role="dialog" aria-modal="true" aria-label="选择背景壁纸">
+  <div id="bgDetailBox">
+    <div class="fdLabel">选择背景壁纸</div>
+    <div class="bgGrid" id="bgGrid"></div>
+    <div class="miniHint">自定义壁纸会压缩后存入本地数据库，避免占用过多空间</div>
+    <div id="dbHint" class="miniHint dbHint" style="display:none"></div>
+    <div class="fdBtns">
+      <button class="fdBtn back" id="bgBack">返回</button>
     </div>
   </div>
 </div>

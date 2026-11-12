@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.3.4', () => assert.strictEqual(U.VERSION, '1.3.4'));
+check('版本号为 1.4.0', () => assert.strictEqual(U.VERSION, '1.4.0'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -124,6 +124,23 @@ check('目标倒计时配置集中在「日期待办」页', () => {
   assert.strictEqual((html.match(/id="swCountdown"/g) || []).length, 1, '倒计时开关重复');
 });
 
+check('v1.4.0 新增：名句库 / 关闭秒针 / 壁纸浮窗 / 分组折叠', () => {
+  const app = read('app.js');
+  const html = read('index.html');
+  const from = app.indexOf('const MOTTO_LIST');
+  const block = app.slice(from, app.indexOf('];', from));
+  const items = block.split('\n').filter((l) => /^\s*"/.test(l))
+    .map((l) => l.trim().replace(/^"/, '').replace(/",?$/, ''));
+  assert.ok(items.length >= 100, '名句不足 100 条，当前 ' + items.length);
+  assert.ok(items.every((m) => m.length <= 40), '存在过长名句');
+  assert.ok(html.includes('data-sec="off"'), '缺少关闭秒针选项');
+  assert.ok(app.includes("v === 'off'"), '关闭秒针逻辑缺失');
+  assert.ok(html.includes('id="bgEntry"') && html.includes('id="bgDetail"'), '壁纸未改为入口 + 浮窗');
+  assert.ok(app.includes('initGroupCollapse'), '缺少分组折叠逻辑');
+  assert.ok(!html.includes('（自动补天数）') && !html.includes('（支持上下键调节或点击日历）'), '括号备注未删除');
+  assert.ok(app.includes('preloadFonts'), '缺少字体预加载');
+});
+
 console.log('\n[3] 资源文件完整性');
 check('CSS 引用的字体文件均存在', () => {
   const css = read('style.css');
@@ -134,22 +151,24 @@ check('CSS 引用的字体文件均存在', () => {
 check('自托管字体均为有效 woff2，旧字体已移除', () => {
   const css = read('style.css');
   const urls = [...new Set(Array.from(css.matchAll(/url\('(assets\/fonts\/[^']+)'\)/g), (m) => m[1]))];
-  assert.ok(urls.length >= 8, '字体声明过少');
+  assert.ok(urls.length >= 7, '字体声明过少');
   urls.forEach((p) => {
     const buf = fs.readFileSync(path.join(ROOT, p));
     assert.strictEqual(buf.slice(0, 4).toString('ascii'), 'wOF2', p + ' 不是有效 woff2');
   });
-  ['orbitron-500-latin.woff2', 'orbitron-700-latin.woff2', 'cinzel-600-latin.woff2'].forEach((f) => {
+  ['orbitron-500-latin.woff2', 'orbitron-700-latin.woff2', 'cinzel-600-latin.woff2',
+    'share-tech-mono-400.woff2', 'roboto-mono-700.woff2', 'dseg7-modern-700.woff2'].forEach((f) => {
     assert.ok(!fs.existsSync(path.join(ROOT, 'assets/fonts', f)), '旧字体未删除: ' + f);
   });
 });
 check('字体方案已更新且倒计时开关存在', () => {
   const app = read('app.js');
   const html = read('index.html');
-  assert.ok(!/id: '(orbitron|cinzel|dsd7)'/.test(app), '仍引用已删除字体');
-  ['dseg7', 'sharetech', 'spacemono', 'plexmono', 'robotomono', 'outfit'].forEach((id) => {
+  assert.ok(!/id: '(orbitron|cinzel|dsd7|sharetech|robotomono)'/.test(app), '仍引用已删除字体');
+  ['modern', 'dseg7', 'spacemono', 'plexmono', 'outfit'].forEach((id) => {
     assert.ok(app.includes(`id: '${id}'`), '缺少字体 ' + id);
   });
+  assert.ok(app.includes('DSEG7 Classic'), '数码管未切换到 DSEG7 Classic');
   assert.ok(html.includes('id="swCountdown"'), '缺少倒计时开关');
   assert.ok(html.includes('id="timeGhost"'), '缺少七段暗段底层');
   assert.ok(app.includes('showCountdown: true'), '缺少默认开启设置');
