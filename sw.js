@@ -15,20 +15,20 @@
  */
 'use strict';
 
-const VERSION = '1.6.0';
+const VERSION = '1.6.1';
 const CACHE = 'study-sim-' + VERSION;
 
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.6.0',
-  './util.js?v=1.6.0',
-  './db.js?v=1.6.0',
-  './sound.js?v=1.6.0',
-  './ambient.js?v=1.6.0',
-  './particles.js?v=1.6.0',
-  './window-rain.js?v=1.6.0',
-  './app.js?v=1.6.0',
+  './style.css?v=1.6.1',
+  './util.js?v=1.6.1',
+  './db.js?v=1.6.1',
+  './sound.js?v=1.6.1',
+  './ambient.js?v=1.6.1',
+  './particles.js?v=1.6.1',
+  './window-rain.js?v=1.6.1',
+  './app.js?v=1.6.1',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
