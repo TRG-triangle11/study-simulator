@@ -738,6 +738,9 @@
 
   function renderClockTime() {
     const now = new Date();
+    /* v1.7.10：时钟永远显示小时段——番茄钟/正计时的「两段」标记会残留在容器上，
+       不清除的话切回时钟只剩分钟和秒（如 1:09 只显示 09） */
+    elTime.classList.remove('no-hour');
     elTH.textContent = pad(now.getHours());
     elTM.textContent = pad(now.getMinutes());
     elTS.textContent = pad(now.getSeconds());
