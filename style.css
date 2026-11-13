@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.0') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.0') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -984,24 +984,27 @@ body.zen-mode #zenExitBtn.show {
 .heatmapCell[data-level="3"] { background: #4caf7d; }
 .heatmapCell[data-level="4"] { background: #66bb6a; box-shadow: 0 0 6px rgba(102, 187, 106, .6); }
 
-/* ===== 氛围白噪音浮动入口与混音面板 ===== */
+/* ===== 氛围白噪音浮动入口（v1.7.0：半透明圆形 + 声音图标） ===== */
 #ambientBtn {
-  position: fixed; right: 28px; bottom: 22px; z-index: 7;
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 16px; border: 1px solid var(--white-18); border-radius: 18px;
-  background: rgba(12, 16, 22, .6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  color: var(--white-80); font-size: 12px; font-family: inherit; letter-spacing: .08em;
-  cursor: pointer; transition: all .25s ease; opacity: 0.85;
+  position: fixed; right: calc(28px + var(--safe-right, 0px)); bottom: calc(22px + var(--safe-bottom, 0px));
+  z-index: 7;
+  width: 46px; height: 46px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--white-14); border-radius: 50%;
+  background: rgba(12, 16, 22, .38); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: var(--white-70); cursor: pointer;
+  transition: all .25s ease; opacity: .6;
 }
 #ambientBtn:hover {
-  opacity: 1; background: rgba(12, 16, 22, .85); color: #fff; transform: translateY(-1px);
+  opacity: 1; background: rgba(12, 16, 22, .8); color: #fff; transform: translateY(-1px);
 }
 #ambientBtn.playing {
-  border-color: var(--color-accent); color: #fff;
+  opacity: .95; border-color: var(--color-accent); color: #fff;
   box-shadow: 0 0 14px var(--color-accent-glow);
 }
 #ambientBtn .soundDot {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--white-40);
+  position: absolute; top: 8px; right: 8px;
+  width: 6px; height: 6px; border-radius: 50%; background: transparent;
   transition: all .25s ease;
 }
 #ambientBtn.playing .soundDot {
@@ -1066,6 +1069,48 @@ body.zen-mode #zenExitBtn.show {
   border-color: var(--color-accent); background: var(--color-accent-bg); color: #fff; font-weight: 600;
 }
 
+/* 设置内 · 今日待办管理（v1.7.0） */
+.sideOpts { display: inline-flex; gap: 6px; }
+.sideOpt {
+  padding: 7px 16px; border: 1px solid var(--panel-border); border-radius: 10px;
+  background: var(--white-05); color: var(--white-85);
+  font-size: 12px; cursor: pointer; transition: all .2s; font-family: inherit;
+}
+.sideOpt:hover { background: var(--white-10); color: #fff; }
+.sideOpt.active {
+  border-color: var(--color-accent); background: var(--color-accent-bg); color: #fff; font-weight: 600;
+}
+.stTodoList { display: flex; flex-direction: column; gap: 6px; }
+.stTodoItem {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: 10px; background: var(--white-05); border: 1px solid transparent;
+}
+.stTodoItem .ck {
+  flex: 0 0 16px; width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid var(--white-40); cursor: pointer; transition: all .2s;
+}
+.stTodoItem .ck.done { background: var(--color-accent); border-color: var(--color-accent); }
+.stTodoItem .txt { flex: 1; min-width: 0; font-size: 13px; color: #fff; word-break: break-all; }
+.stTodoItem.done .txt { color: var(--white-35); text-decoration: line-through; }
+.stTodoItem .del {
+  flex: 0 0 auto; border: none; background: transparent; color: var(--white-40);
+  font-size: 13px; cursor: pointer; padding: 2px 6px; border-radius: 6px; font-family: inherit;
+}
+.stTodoItem .del:hover { color: #ff8a80; background: var(--white-05); }
+.stTodoAdd { display: flex; gap: 8px; margin-top: 10px; }
+.stTodoAdd input {
+  flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16);
+  color: #fff; font-size: 13px; font-family: inherit; outline: none;
+}
+.stTodoAdd input:focus { border-color: var(--color-accent); }
+.stTodoAdd button {
+  flex: 0 0 auto; padding: 8px 14px; border-radius: 10px;
+  border: 1px solid var(--panel-border); background: var(--white-08);
+  color: #fff; font-size: 12px; cursor: pointer; transition: all .2s; font-family: inherit;
+}
+.stTodoAdd button:hover { background: var(--color-accent-bg); border-color: var(--color-accent); }
+
 /* 禅意模式隐匿白噪音按钮 */
 body.zen-mode #ambientBtn,
 body.zen-mode #ambientPanel {
@@ -1121,27 +1166,28 @@ input, textarea {
 .ambMasterVolRow input[type=range] { flex: 1; min-width: 0; }
 .ambMasterVolRow span:last-child { width: 34px; text-align: right; color: var(--white-50); }
 
-/* 触摸设备：为纯 hover 交互提供常显替代入口 */
+/* 触摸设备：为纯 hover 交互提供替代入口（v1.7.0 重做）
+   - 模式栏 / 全屏按钮不再常驻：点顶部边缘唤出模式栏，点底部中间切换全屏（热区见 #topHotzone/#fsHotzone）
+   - 左右待办面板整体隐藏，待办在「设置 → 📅 日期待办 → 今日待办」中管理 */
 @media (hover: none) {
-  body:not(.zen-mode) #modeBar {
+  .todoZone { display: none !important; }
+  body:not(.zen-mode) #zenExitBtn {
     opacity: 1 !important; pointer-events: auto !important; visibility: visible !important;
     transform: translateX(-50%) translateY(0) !important;
-    top: 10px; max-width: 96vw; overflow-x: auto;
   }
   .modeBtn, .modeZenBtn { padding: 6px 9px; font-size: 11px; }
-  body:not(.zen-mode) #fsBtn {
-    opacity: 1 !important; pointer-events: auto !important; visibility: visible !important;
+}
+
+/* 触摸热区：仅触摸设备存在；层级低于 modeBar/ambientBtn，不挡它们的点击 */
+#topHotzone, #fsHotzone { display: none; }
+@media (hover: none) {
+  #topHotzone {
+    display: block; position: fixed; top: 0; left: 0; right: 0;
+    height: 60px; z-index: 5;
   }
-  body.zen-mode #zenExitBtn {
-    opacity: 1 !important; pointer-events: auto !important; visibility: visible !important;
-    transform: translateX(-50%) translateY(0) !important;
-  }
-  .todoZone { width: 22px; }
-  .todoZone .edge { width: 22px; background: rgba(255,255,255,.06); }
-  .todoZone .edge::after {
-    content: '待办'; position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); writing-mode: vertical-rl;
-    font-size: 10px; letter-spacing: .2em; color: var(--white-40); pointer-events: none;
+  #fsHotzone {
+    display: block; position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 52%; height: 64px; z-index: 5;
   }
   .bgCard .rm, .bgCard:hover .rm { display: flex !important; }
   #clock .hint { display: none; }

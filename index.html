@@ -13,9 +13,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="自习模拟器">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
-<title>自习模拟器 v1.6.1</title>
+<title>自习模拟器 v1.7.0</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
-<link rel="stylesheet" href="style.css?v=1.6.1">
+<link rel="stylesheet" href="style.css?v=1.7.0">
 </head>
 <body>
 
@@ -83,7 +83,7 @@
     <div class="sHeader">
       <div class="sTitle">
         <h2>设置</h2>
-        <span class="ver">v1.6.1</span>
+        <span class="ver">v1.7.0</span>
       </div>
       <div class="sSearch">
         <svg class="sSearchIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -353,20 +353,35 @@
       </div>
 
       <div class="sGroup">
-        <div class="sLabel">待办清单</div>
+        <div class="sLabel">今日待办</div>
         <div class="toggles">
+          <div class="toggleRow">
+            <div><div class="tName">显示区域</div><div class="tDesc">待办显示在主界面的哪一侧角落</div></div>
+            <div class="sideOpts" id="todoSideOpts">
+              <button class="sideOpt" data-side="L">左侧</button>
+              <button class="sideOpt" data-side="R">右侧</button>
+            </div>
+          </div>
           <div class="sGroup" id="todoSizeGroup">
-            <div class="sLabel">待办提醒字号 <span class="val" id="todoSizeVal">14px</span></div>
+            <div class="sLabel">字体大小 <span class="val" id="todoSizeVal">14px</span></div>
             <div class="sizeRow">
-              <input type="range" id="todoSizeRange" min="10" max="26" step="1" value="14" aria-label="待办提醒字号">
+              <input type="range" id="todoSizeRange" min="10" max="26" step="1" value="14" aria-label="待办字体大小">
               <output id="todoSizeOut">14</output>
             </div>
           </div>
           <div class="sGroup" id="todoOpacityGroup" style="margin-top:14px">
-            <div class="sLabel">待办文字透明度 <span class="val" id="todoOpacityVal">60%</span></div>
+            <div class="sLabel">透明度 <span class="val" id="todoOpacityVal">60%</span></div>
             <div class="sizeRow">
               <input type="range" id="todoOpacityRange" min="20" max="100" step="5" value="60" aria-label="待办文字透明度">
               <output id="todoOpacityOut">60</output>
+            </div>
+          </div>
+          <div class="sGroup" id="todoListGroup" style="margin-top:14px">
+            <div class="sLabel">待办内容 <span class="val" id="todoCntSet">0 项</span></div>
+            <div class="stTodoList" id="stTodoList"></div>
+            <div class="stTodoAdd">
+              <input type="text" id="stTodoInput" placeholder="输入待办，回车添加" maxlength="60" aria-label="添加待办">
+              <button id="stTodoAddBtn">＋ 添加</button>
             </div>
           </div>
         </div>
@@ -454,7 +469,7 @@
       </div>
       <div class="obCard">
         <div class="obCardTitle"><span class="obIcon">📋</span> 左右感应待办清单</div>
-        <div class="obCardDesc">鼠标移近屏幕<b>左侧或右侧边缘</b>自动滑出今日待办；触摸设备点击边缘展开，回车快速添加。</div>
+        <div class="obCardDesc">桌面端鼠标移近屏幕<b>左侧或右侧边缘</b>自动滑出今日待办；触摸设备在「设置 → 📅 日期待办 → 今日待办」中添加与管理。</div>
       </div>
       <div class="obCard">
         <div class="obCardTitle"><span class="obIcon">🎨</span> 田野都市壁纸 ＆ 设置</div>
@@ -493,9 +508,13 @@
 </div>
 
 <!-- 氛围白噪音浮动按钮与混音面板 -->
-<button id="ambientBtn" title="打开氛围白噪音混音台">
+<button id="ambientBtn" title="氛围白噪音" aria-label="氛围白噪音">
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/>
+    <path d="M15.5 9.2a4 4 0 0 1 0 5.6"/>
+    <path d="M17.8 7a7 7 0 0 1 0 10"/>
+  </svg>
   <span class="soundDot"></span>
-  <span>🎧 氛围音效</span>
 </button>
 
 <div id="ambientPanel" role="region" aria-label="氛围白噪音混音台">
@@ -522,13 +541,13 @@
 <input type="file" id="fileInput" accept="image/*" aria-label="上传自定义壁纸">
 
 <!-- 核心脚本加载（util.js 必须最先加载） -->
-<script src="util.js?v=1.6.1"></script>
-<script src="db.js?v=1.6.1"></script>
-<script src="sound.js?v=1.6.1"></script>
-<script src="ambient.js?v=1.6.1"></script>
-<script src="particles.js?v=1.6.1"></script>
-<script src="window-rain.js?v=1.6.1"></script>
-<script src="app.js?v=1.6.1"></script>
+<script src="util.js?v=1.7.0"></script>
+<script src="db.js?v=1.7.0"></script>
+<script src="sound.js?v=1.7.0"></script>
+<script src="ambient.js?v=1.7.0"></script>
+<script src="particles.js?v=1.7.0"></script>
+<script src="window-rain.js?v=1.7.0"></script>
+<script src="app.js?v=1.7.0"></script>
 <script>
 /* Service Worker：仅在 http(s) 下注册；双击 index.html（file://）时浏览器不支持，直接跳过 */
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {

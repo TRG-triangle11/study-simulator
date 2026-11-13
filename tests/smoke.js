@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.6.1', () => assert.strictEqual(U.VERSION, '1.6.1'));
+check('版本号为 1.7.0', () => assert.strictEqual(U.VERSION, '1.7.0'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -301,16 +301,50 @@ check('v1.5.0：窄屏排版与安全区', () => {
   assert.ok(css.includes('100dvh'), '缺少动态视口高度（iOS 工具栏）适配');
 });
 
+check('v1.7.0：触摸端交互 + 设置内待办 + 字体子集', () => {
+  const html = read('index.html');
+  const app = read('app.js');
+  const css = read('style.css');
+  const sw = read('sw.js');
+
+  // 触摸端：面板隐藏 + 热区逻辑；桌面 mousemove 逻辑保留
+  assert.ok(css.includes('.todoZone { display: none !important; }'), '触摸端待办面板未隐藏');
+  assert.ok(css.includes('#topHotzone') && css.includes('#fsHotzone'), '缺少触摸热区样式');
+  assert.ok(app.includes("id = 'topHotzone'") && app.includes("id = 'fsHotzone'"), '触摸热区未创建');
+  assert.ok(app.includes('document.addEventListener(\'mousemove\''), '桌面鼠标感应被误删');
+  assert.ok(!/@media \(hover: none\) \{\s*body:not\(\.zen-mode\) #modeBar/.test(css), '触摸端模式栏仍强制常显');
+
+  // 待办设置化：显示区域 / 列表 / 添加入口
+  assert.ok(html.includes('id="todoSideOpts"') && html.includes('id="stTodoList"'), '缺少设置内待办管理');
+  assert.ok(html.includes('id="stTodoAddBtn"'), '缺少 + 添加入口');
+  assert.ok(html.includes('id="todoSizeRange"') && html.includes('id="todoOpacityRange"'), '字号/透明度设置丢失');
+  assert.ok(app.includes("state.settings.todoSide || 'L'"), '显示区域设置未生效');
+  assert.ok(app.includes('function renderSetTodos'), '缺少设置内待办渲染');
+
+  // 氛围按钮圆形化：SVG 图标 + 圆形容器
+  assert.ok(html.includes('id="ambientBtn"') && /<svg[^>]*stroke="currentColor"/.test(html), '氛围按钮缺少声音图标');
+  assert.ok(css.includes('border-radius: 50%') && css.includes('#ambientBtn.playing'), '氛围按钮未圆形化');
+
+  // 字体子集：文件显著缩小且关键 URL 带版本参数（穿透 SW 旧缓存）
+  ['regular', 'bold'].forEach((w) => {
+    const f = 'assets/fonts/harmonyos-sans-sc-' + w + '.woff2';
+    const size = fs.statSync(path.join(ROOT, f)).size;
+    assert.ok(size < 1024 * 1024, f + ' 未子集化（' + (size / 1024).toFixed(0) + 'KB）');
+  });
+  assert.ok(css.includes('harmonyos-sans-sc-regular.woff2?v='), '字体 URL 缺少版本参数');
+  assert.ok(sw.includes('harmonyos-sans-sc-regular.woff2?v='), 'SW 外壳字体缺少版本参数');
+});
+
 console.log('\n[3] 资源文件完整性');
 check('CSS 引用的字体文件均存在', () => {
   const css = read('style.css');
-  const urls = Array.from(css.matchAll(/url\('(assets\/[^']+)'\)/g), (m) => m[1]);
+  const urls = Array.from(css.matchAll(/url\('(assets\/[^']+)'\)/g), (m) => m[1].split('?')[0]);
   assert.ok(urls.length >= 6);
   urls.forEach((p) => assert.ok(fs.existsSync(path.join(ROOT, p)), '缺少 ' + p));
 });
 check('自托管字体均为有效 woff2，旧字体已移除', () => {
   const css = read('style.css');
-  const urls = [...new Set(Array.from(css.matchAll(/url\('(assets\/fonts\/[^']+)'\)/g), (m) => m[1]))];
+  const urls = [...new Set(Array.from(css.matchAll(/url\('(assets\/fonts\/[^']+)'\)/g), (m) => m[1].split('?')[0]))];
   assert.ok(urls.length >= 7, '字体声明过少');
   urls.forEach((p) => {
     const buf = fs.readFileSync(path.join(ROOT, p));

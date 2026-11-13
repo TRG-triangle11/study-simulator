@@ -205,7 +205,7 @@
     showSec: true, secStyle: 'compact',
     showDate: true, dateSize: 22, dateSpacing: 0.22,
     showYear: true, showMonthDay: true, showWeekday: true,
-    todoSize: 14, todoOpacity: 0.6, showMotto: true, showCountdown: true,
+    todoSize: 14, todoOpacity: 0.6, todoSide: 'L', showMotto: true, showCountdown: true,
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
     targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
     particleEffect: 'rain', rainSpeed: 2, rainDensity: 2, screenFx: false
@@ -1420,6 +1420,11 @@
 
   function renderRemind(side) {
     const rem = side === 'L' ? remindL : remindR;
+    /* 显示区域设置：只渲染用户选中的一侧，另一侧彻底清空（触摸与桌面统一生效） */
+    if (side !== (state.settings.todoSide || 'L')) {
+      rem.classList.remove('show'); rem.innerHTML = '';
+      return;
+    }
     const list = getTodos(side);
     rem.style.fontSize = (state.settings.todoSize || 14) + 'px';
     rem.innerHTML = '';
@@ -1436,6 +1441,66 @@
       rem.appendChild(line);
     });
     rem.classList.add('show');
+  }
+
+  /* 设置面板内的待办管理：增删勾选都写回同一份 state.todos */
+  function renderSetTodos() {
+    const box = $('#stTodoList'), cnt = $('#todoCntSet');
+    if (!box) return;
+    const side = state.settings.todoSide || 'L';
+    const list = getTodos(side);
+    if (cnt) cnt.textContent = list.filter((t) => !t.done).length + ' 项';
+    box.innerHTML = '';
+    if (!list.length) {
+      const tip = document.createElement('div');
+      tip.className = 'emptyTip';
+      tip.textContent = (side === 'R' ? '右侧' : '左侧') + '还没有待办，在下方添加';
+      box.appendChild(tip);
+    }
+    list.forEach((t, idx) => {
+      const row = document.createElement('div');
+      row.className = 'stTodoItem' + (t.done ? ' done' : '');
+      const ck = document.createElement('span');
+      ck.className = 'ck' + (t.done ? ' done' : '');
+      ck.onclick = () => { state.todos[side][idx].done = !state.todos[side][idx].done; saveTodos(); renderTodos(); renderSetTodos(); };
+      const tx = document.createElement('span');
+      tx.className = 'txt' + (t.done ? ' done' : '');
+      tx.textContent = t.text;
+      const del = document.createElement('button');
+      del.className = 'del'; del.textContent = '✕'; del.setAttribute('aria-label', '删除这条待办');
+      del.onclick = () => { state.todos[side].splice(idx, 1); saveTodos(); renderTodos(); renderSetTodos(); };
+      row.appendChild(ck); row.appendChild(tx); row.appendChild(del);
+      box.appendChild(row);
+    });
+  }
+
+  function initSetTodos() {
+    const inp = $('#stTodoInput'), btn = $('#stTodoAddBtn');
+    const sideOpts = $('#todoSideOpts');
+    if (!inp || !btn || !sideOpts) return;
+
+    function addFromInput() {
+      const side = state.settings.todoSide || 'L';
+      const text = (inp.value || '').trim();
+      if (!text) return;
+      state.todos[side].push({ text: text, done: false });
+      saveTodos(); renderTodos(); renderSetTodos();
+      inp.value = ''; inp.focus();
+    }
+    btn.addEventListener('click', addFromInput);
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') addFromInput(); });
+
+    sideOpts.querySelectorAll('.sideOpt').forEach((b) => {
+      b.addEventListener('click', function () {
+        state.settings.todoSide = this.dataset.side === 'R' ? 'R' : 'L';
+        saveSettings();
+        sideOpts.querySelectorAll('.sideOpt').forEach((x) =>
+          x.classList.toggle('active', x.dataset.side === state.settings.todoSide));
+        renderTodos(); renderSetTodos();
+      });
+    });
+    sideOpts.querySelectorAll('.sideOpt').forEach((x) =>
+      x.classList.toggle('active', x.dataset.side === (state.settings.todoSide || 'L')));
   }
 
   function renderTodos() {
@@ -1475,6 +1540,7 @@
       }
       renderRemind(z);
     });
+    renderSetTodos();
   }
 
   const HOVER_DELAY = 500;
@@ -1489,16 +1555,7 @@
   const hoverTimer = { L: null, R: null };
   function bindZone(zone, key) {
     if (TOUCH) {
-      // 触摸设备：点击边缘/标题切换面板，替代 mouseenter 感应
-      zone.addEventListener('click', (e) => {
-        if (e.target.closest('.todoList, .addTodo, input, button')) return;
-        const panel = zone.querySelector('.todoPanel');
-        const show = !panel.classList.contains('show');
-        panel.classList.toggle('show', show);
-        zone.classList.toggle('hovered', show);
-        const rem = key === 'L' ? remindL : remindR;
-        rem.classList.toggle('show', !show && getTodos(key).length > 0);
-      });
+      // 触摸设备：待办面板已隐藏，增删改查全部在设置内完成（v1.7.0）
       return;
     }
     zone.addEventListener('mouseenter', () => {
@@ -1581,6 +1638,32 @@
     else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
   });
   document.addEventListener('fullscreenchange', updateFsBtn);
+
+  /* ===== 触摸设备交互（v1.7.0）=====
+   * - 模式栏 / 全屏按钮不再常驻；
+   * - 点按屏幕顶部边缘临时唤出模式栏，2.6 秒后自动隐藏；
+   * - 点按底部中间热区切换全屏（iPadOS 16.4+ 支持，不支持的设备点按无副作用）；
+   * - 桌面鼠标逻辑（mousemove 感应 + fsBtn 悬浮按钮）完全不受影响。 */
+  if (TOUCH) {
+    const toggleFullscreen = () => {
+      if (state.zenMode) return;
+      if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen(); }
+      else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    };
+    const topZone = document.createElement('div');
+    topZone.id = 'topHotzone';
+    topZone.addEventListener('click', () => {
+      if (state.zenMode) return;
+      modeBar.classList.add('show');
+      clearTimeout(modeBarTimer);
+      modeBarTimer = setTimeout(() => modeBar.classList.remove('show'), 2600);
+    });
+    const fsZone = document.createElement('div');
+    fsZone.id = 'fsHotzone';
+    fsZone.addEventListener('click', toggleFullscreen);
+    document.body.appendChild(topZone);
+    document.body.appendChild(fsZone);
+  }
 
   /* ===== 鼠标空闲隐藏 ===== */
   const IDLE_TIME = 3000;
@@ -2233,6 +2316,7 @@
     initSettingsTabs();
     initAmbientMixer();
     initParticles();
+    initSetTodos();
     initCustomDatePicker();
     setupShortcuts();
     setupOnboard();
