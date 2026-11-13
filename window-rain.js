@@ -152,14 +152,17 @@
     o.backgroundBlurSteps = mobile ? 2 : 3;
     o.backgroundWrapMode = 'clamp';
 
-    /* 窗户雨滴的观感要点：大颗水珠 + 稀疏 + 靠折射出形，不要靠自发光发白。
-       dropletsPerSeconds 一旦开到几百，细小水滴会糊成一层白噪点，必须压低。 */
-    o.spawnLimit = REDUCED ? 80 : (mobile ? 130 : 260);
-    o.spawnSize = mobile ? [26, 72] : [34, 104];
-    o.spawnInterval = [0.16, 0.4];
-    o.motionInterval = [0.3, 0.9];
+    /* 密度与快慢差异的调参依据（库的物理模型）：
+       - 生成节奏 spawnInterval 越短、蒸发 evaporate 越低，同屏雨滴越多；
+       - 滑落速度 = (重力×质量 − 随机阻力)/质量，阻力每隔 motionInterval 重新随机，
+         质量差越大（spawnSize 范围越宽），大滴快、小滴挂壁的分层越明显；
+       - motionInterval 拉长后，快滴会持续快、慢滴会持续慢，不会全体匀速。 */
+    o.spawnLimit = REDUCED ? 140 : (mobile ? 260 : 520);
+    o.spawnSize = mobile ? [18, 84] : [22, 120];
+    o.spawnInterval = [0.05, 0.15];
+    o.motionInterval = [0.6, 2.2];
     o.xShifting = [0.01, 0.06];
-    o.slipRate = 0.55;
+    o.slipRate = 0.5;
     o.colliderSize = 0.9;
     o.trailDropDensity = 0.2;
     o.trailDropSize = [0.28, 0.44];
@@ -168,14 +171,14 @@
     o.initialSpread = 0.55;
     o.shrinkRate = 0.014;
     o.velocitySpread = 0.3;
-    o.evaporate = 16;
+    o.evaporate = 7;
     o.gravity = 2400;
 
-    o.dropletsPerSeconds = REDUCED ? 10 : (mobile ? 14 : 22);
-    o.dropletSize = [14, 32];
+    o.dropletsPerSeconds = REDUCED ? 30 : (mobile ? 40 : 70);
+    o.dropletSize = [12, 30];
     o.smoothRaindrop = [0.94, 1.0];
-    o.refractBase = 0.44;
-    o.refractScale = 0.78;
+    o.refractBase = 0.5;
+    o.refractScale = 0.9;
     o.raindropCompose = 'smoother';
     o.raindropLightPos = [-0.35, -0.55, 1.2, 0];
     o.raindropDiffuseLight = [0.1, 0.1, 0.12];
