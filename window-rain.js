@@ -181,10 +181,13 @@
     o.refractScale = 0.9;
     o.raindropCompose = 'smoother';
     o.raindropLightPos = [-0.35, -0.55, 1.2, 0];
-    o.raindropDiffuseLight = [0.1, 0.1, 0.12];
-    o.raindropShadowOffset = 0.74;
+    /* 亮度：雨滴的可见度 = 折射背景 + 漫反射 + 高光。
+       黑色壁纸下折射项几乎为零，必须靠 diffuse/specular 把水珠「打亮」；
+       shadowOffset 越高暗部越多，压低让整体更亮。 */
+    o.raindropDiffuseLight = [0.22, 0.22, 0.24];
+    o.raindropShadowOffset = 0.6;
     o.raindropEraserSize = [0.9, 1.0];
-    o.raindropSpecularLight = [0.04, 0.04, 0.045];
+    o.raindropSpecularLight = [0.12, 0.12, 0.13];
     o.raindropSpecularShininess = 40;
     o.raindropLightBump = 0.62;
   }
