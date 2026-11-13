@@ -568,7 +568,7 @@
       const c = document.createElement('div');
       c.className = 'fdCard' + (fn.id === state.settings.font ? ' active' : '');
       const pre = document.createElement('div');
-      pre.className = 'fdPre'; pre.textContent = fn.sample; pre.style.fontFamily = fn.css;
+      pre.className = 'fdPre' + (fn.segment ? ' segment' : ''); pre.textContent = fn.sample; pre.style.fontFamily = fn.css;
       const name = document.createElement('div');
       name.className = 'fdName'; name.textContent = fn.name;
       c.appendChild(pre); c.appendChild(name);
@@ -1639,17 +1639,28 @@
   });
   document.addEventListener('fullscreenchange', updateFsBtn);
 
-  /* ===== 触摸设备交互（v1.7.0）=====
-   * - 模式栏 / 全屏按钮不再常驻；
-   * - 点按屏幕顶部边缘临时唤出模式栏，2.6 秒后自动隐藏；
-   * - 点按底部中间热区切换全屏（iPadOS 16.4+ 支持，不支持的设备点按无副作用）；
+  /* ===== 触摸设备交互（v1.7.0 / v1.7.2）=====
+   * - 模式栏不常驻：点按屏幕顶部边缘临时唤出，2.6 秒后自动隐藏；
+   * - 右下角圆形全屏按钮 + 底部中央热区都可切换全屏；
    * - 桌面鼠标逻辑（mousemove 感应 + fsBtn 悬浮按钮）完全不受影响。 */
+  const fsRoundBtn = $('#fsRoundBtn');
+  function updateFsRound() {
+    if (!fsRoundBtn) return;
+    const on = !!document.fullscreenElement;
+    fsRoundBtn.classList.toggle('on', on);
+    fsRoundBtn.title = on ? '退出全屏' : '全屏显示';
+    fsRoundBtn.setAttribute('aria-label', on ? '退出全屏' : '全屏显示');
+  }
   if (TOUCH) {
     const toggleFullscreen = () => {
       if (state.zenMode) return;
       if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen(); }
       else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     };
+    if (fsRoundBtn) {
+      fsRoundBtn.addEventListener('click', toggleFullscreen);
+      document.addEventListener('fullscreenchange', updateFsRound);
+    }
     const topZone = document.createElement('div');
     topZone.id = 'topHotzone';
     topZone.addEventListener('click', () => {

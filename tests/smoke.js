@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.7.1', () => assert.strictEqual(U.VERSION, '1.7.1'));
+check('版本号为 1.7.2', () => assert.strictEqual(U.VERSION, '1.7.2'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -229,7 +229,9 @@ check('v1.5.0：PWA 可安装（manifest / sw / 图标 / iOS 主屏）', () => {
   assert.ok(html.includes('rel="manifest"'), '缺少 manifest 引用');
   assert.ok(html.includes('apple-mobile-web-app-capable'), '缺少 iOS 全屏 meta');
   assert.ok(html.includes('apple-touch-icon'), '缺少 iOS 主屏图标');
-  assert.ok(html.includes('name="theme-color"'), '缺少 theme-color');
+  // v1.7.2：meta theme-color 已移除（iPadOS PWA 会用它染状态栏与底部安全区，造成壁纸上下黑条），
+  // Android 所需的 theme_color 保留在 manifest.webmanifest 中
+  assert.ok(!html.includes('name="theme-color"'), 'meta theme-color 应已移除');
 
   // manifest 结构与图标文件
   const manifest = JSON.parse(read('manifest.webmanifest'));
@@ -333,6 +335,27 @@ check('v1.7.0：触摸端交互 + 设置内待办 + 字体子集', () => {
   });
   assert.ok(css.includes('harmonyos-sans-sc-regular.woff2?v='), '字体 URL 缺少版本参数');
   assert.ok(sw.includes('harmonyos-sans-sc-regular.woff2?v='), 'SW 外壳字体缺少版本参数');
+});
+
+check('v1.7.2：PWA 黑边修复 + 按钮移位 + 数码管预览', () => {
+  const html = read('index.html');
+  const app = read('app.js');
+  const css = read('style.css');
+  // iOS PWA 不再用 meta theme-color 染状态栏（manifest 的 theme_color 保留给 Android）
+  assert.ok(!html.includes('name="theme-color"'), 'meta theme-color 应移除');
+  assert.ok(html.includes('apple-mobile-web-app-status-bar-style" content="black-translucent'), 'black-translucent 缺失');
+  // 氛围按钮在左下，面板锚点同步
+  const ambCss = css.slice(css.indexOf('#ambientBtn {'), css.indexOf('#ambientBtn {') + 400);
+  assert.ok(ambCss.includes('left: calc(28px + var(--safe-left'), '氛围按钮未移至左下');
+  const panelCss = css.slice(css.indexOf('#ambientPanel {'), css.indexOf('#ambientPanel {') + 400);
+  assert.ok(panelCss.includes('left: 28px'), '混音面板锚点未同步');
+  // 触摸端圆形全屏按钮
+  assert.ok(html.includes('id="fsRoundBtn"') && html.includes('icoExpand'), '缺少圆形全屏按钮');
+  assert.ok(css.includes('#fsRoundBtn.on .icoCompress'), '全屏态图标切换缺失');
+  assert.ok(app.includes('updateFsRound'), '全屏按钮状态未联动');
+  // 数码管预览专项修正
+  assert.ok(css.includes('.fdPre.segment'), '缺少数码管预览修正样式');
+  assert.ok(app.includes("' segment'"), '预览未打 segment 类');
 });
 
 console.log('\n[3] 资源文件完整性');

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b1016">
+<!-- 注意：iOS PWA 下不设 meta theme-color——iPadOS 会用它染状态栏与底部安全区背景，
+     导致壁纸上下露出深色边条。删除后状态栏随页面内容延伸（black-translucent）。 -->
 <meta name="description" content="沉浸式自习专注时钟：时钟、番茄钟、正计时、目标倒数、白噪音与窗户雨滴特效，支持装到手机主屏离线使用。">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,9 +14,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="自习模拟器">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
-<title>自习模拟器 v1.7.1</title>
+<title>自习模拟器 v1.7.2</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
-<link rel="stylesheet" href="style.css?v=1.7.1">
+<link rel="stylesheet" href="style.css?v=1.7.2">
 </head>
 <body>
 
@@ -83,7 +84,7 @@
     <div class="sHeader">
       <div class="sTitle">
         <h2>设置</h2>
-        <span class="ver">v1.7.1</span>
+        <span class="ver">v1.7.2</span>
       </div>
       <div class="sSearch">
         <svg class="sSearchIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -517,6 +518,16 @@
   <span class="soundDot"></span>
 </button>
 
+<!-- 全屏按钮：触摸设备右下角圆形；桌面端仍用底部中央的 #fsBtn -->
+<button id="fsRoundBtn" title="全屏显示" aria-label="全屏显示">
+  <svg class="icoExpand" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+  </svg>
+  <svg class="icoCompress" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>
+  </svg>
+</button>
+
 <div id="ambientPanel" role="region" aria-label="氛围白噪音混音台">
   <div class="ambHeader">
     <h3>🎧 氛围白噪音混音台</h3>
@@ -541,13 +552,13 @@
 <input type="file" id="fileInput" accept="image/*" aria-label="上传自定义壁纸">
 
 <!-- 核心脚本加载（util.js 必须最先加载） -->
-<script src="util.js?v=1.7.1"></script>
-<script src="db.js?v=1.7.1"></script>
-<script src="sound.js?v=1.7.1"></script>
-<script src="ambient.js?v=1.7.1"></script>
-<script src="particles.js?v=1.7.1"></script>
-<script src="window-rain.js?v=1.7.1"></script>
-<script src="app.js?v=1.7.1"></script>
+<script src="util.js?v=1.7.2"></script>
+<script src="db.js?v=1.7.2"></script>
+<script src="sound.js?v=1.7.2"></script>
+<script src="ambient.js?v=1.7.2"></script>
+<script src="particles.js?v=1.7.2"></script>
+<script src="window-rain.js?v=1.7.2"></script>
+<script src="app.js?v=1.7.2"></script>
 <script>
 /* Service Worker：仅在 http(s) 下注册；双击 index.html（file://）时浏览器不支持，直接跳过 */
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {

@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.1') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.2') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -338,6 +338,11 @@ body {
 .fdCard .fdPre {
   font-size: 27px; font-weight: 700; line-height: 1.1; color: #fff;
   letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+/* DSEG7 数码管字体的字面高度远大于常规字体，同字号下会显得突兀：
+   缩小字号并加大行高，让字形在卡片里的视觉高度与其他字体对齐 */
+.fdCard .fdPre.segment {
+  font-size: 22px; line-height: 1.5; letter-spacing: .06em;
 }
 .fdCard .fdName { font-size: 11px; color: var(--white-50); margin-top: 6px; letter-spacing: .04em }
 .fdCard.active .fdName { color: rgba(76,175,125,.85) }
@@ -984,9 +989,9 @@ body.zen-mode #zenExitBtn.show {
 .heatmapCell[data-level="3"] { background: #4caf7d; }
 .heatmapCell[data-level="4"] { background: #66bb6a; box-shadow: 0 0 6px rgba(102, 187, 106, .6); }
 
-/* ===== 氛围白噪音浮动入口（v1.7.0：半透明圆形 + 声音图标） ===== */
+/* ===== 氛围白噪音浮动入口（v1.7.2：移至左下角，半透明圆形 + 声音图标） ===== */
 #ambientBtn {
-  position: fixed; right: calc(28px + var(--safe-right, 0px)); bottom: calc(22px + var(--safe-bottom, 0px));
+  position: fixed; left: calc(28px + var(--safe-left, 0px)); bottom: calc(22px + var(--safe-bottom, 0px));
   z-index: 7;
   width: 46px; height: 46px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -1011,9 +1016,31 @@ body.zen-mode #zenExitBtn.show {
   background: var(--color-accent); box-shadow: 0 0 8px var(--color-accent);
 }
 
+/* ===== 全屏按钮（v1.7.2）：触摸设备右下角圆形；桌面隐藏仍用 #fsBtn ===== */
+#fsRoundBtn {
+  display: none;
+}
+@media (hover: none) {
+  #fsRoundBtn {
+    display: inline-flex; position: fixed;
+    width: 46px; height: 46px; padding: 0;
+    align-items: center; justify-content: center;
+    border: 1px solid var(--white-14); border-radius: 50%;
+    background: rgba(12, 16, 22, .38); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    color: var(--white-70); cursor: pointer;
+    transition: all .25s ease; opacity: .6; z-index: 7;
+  }
+  #fsRoundBtn:hover { opacity: 1; background: rgba(12, 16, 22, .8); color: #fff; transform: translateY(-1px); }
+  #fsRoundBtn .icoCompress { display: none; }
+  #fsRoundBtn.on .icoExpand { display: none; }
+  #fsRoundBtn.on .icoCompress { display: block; }
+  #fsRoundBtn.on { opacity: .95; border-color: var(--color-accent); color: #fff; }
+}
+body.zen-mode #fsRoundBtn { visibility: hidden !important; pointer-events: none !important; }
+
 /* 混音抽屉浮窗 */
 #ambientPanel {
-  position: fixed; right: 28px; bottom: 70px; z-index: 15;
+  position: fixed; left: 28px; bottom: 70px; z-index: 15;
   width: 320px; max-width: 90vw; background: rgba(15, 20, 28, .94);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--panel-border); border-radius: 18px;
@@ -1427,11 +1454,15 @@ input, textarea {
 #modeBar { top: calc(18px + var(--safe-top)); }
 #fsBtn { bottom: calc(22px + var(--safe-bottom)); }
 #ambientBtn {
+  left: calc(28px + var(--safe-left));
+  bottom: calc(22px + var(--safe-bottom));
+}
+#fsRoundBtn {
   right: calc(28px + var(--safe-right));
   bottom: calc(22px + var(--safe-bottom));
 }
 #ambientPanel {
-  right: calc(28px + var(--safe-right));
+  left: calc(28px + var(--safe-left));
   bottom: calc(70px + var(--safe-bottom));
 }
 #clockWrap {
