@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.7.7', () => assert.strictEqual(U.VERSION, '1.7.7'));
+check('版本号为 1.7.8', () => assert.strictEqual(U.VERSION, '1.7.8'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -98,7 +98,7 @@ check('模式栏为时钟 / 番茄钟 / 正计时 / 禅意，大时钟常驻', (
   const css = read('style.css');
   assert.ok(!css.includes('[data-mode="target"]'), 'CSS 仍存在隐藏大时钟的倒数日规则');
   const app = read('app.js');
-  assert.ok(app.includes("elDate.style.display = state.settings.showDate ? '' : 'none'"), '日期仍受计时模式限制');
+  assert.ok(app.includes("(state.settings.showDate && m === 'clock')"), '日期未限制为仅时钟模式显示（v1.7.8 用户要求）');
   assert.ok(app.includes("if (!['clock', 'pomodoro', 'stopwatch'].includes(initialSettings.mode))"), '旧设置未做模式回落兼容');
 });
 check('正计时链路完整（渲染 / 控制 / 归档 / 旧数据兼容）', () => {
@@ -107,7 +107,7 @@ check('正计时链路完整（渲染 / 控制 / 归档 / 旧数据兼容）', (
     'function resetStopwatch', "queuePendingRecord('stopwatch', delta, now)",
     'stopwatch: persisted.stopwatch', 'const p = t.pomodoro || t, s = t.stopwatch || {};']
     .forEach((frag) => assert.ok(app.includes(frag), '缺少 ' + frag));
-  assert.ok(app.includes("elTS.textContent = '00'; // 从正计时切回时清掉残留秒数"), '番茄钟未清理残留秒数');
+  assert.ok(app.includes('elTS.textContent = pad(s)'), '番茄钟/正计时秒位未实时渲染（v1.7.8 重做时长格式）');
 });
 check('目标倒计时配置集中在「日期待办」页', () => {
   const html = read('index.html');

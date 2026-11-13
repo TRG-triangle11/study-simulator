@@ -208,7 +208,8 @@
     todoSize: 14, todoOpacity: 0.6, todoSide: 'L', showMotto: true, showCountdown: false,
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
     targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
-    particleEffect: 'rain', rainSpeed: 2, rainDensity: 2, screenFx: false
+    particleEffect: 'rain', rainSpeed: 2, rainDensity: 2, screenFx: false,
+    pomoTimeStyle: 'adaptive', swTimeStyle: 'adaptive'
   }, loadSettings());
 
   // 兼容迁移历史版本废弃的壁纸 id
@@ -680,8 +681,9 @@
     const m = state.settings.mode;
     elClock.dataset.mode = m;
     elTime.dataset.mode = m;
-    // 日期与倒计时是主界面常驻信息，只由各自开关控制，不受计时模式影响
-    elDate.style.display = state.settings.showDate ? '' : 'none';
+    // v1.7.8：日期只在时钟模式显示（用户要求正计时/番茄钟隐藏日期）；
+    // 倒计时行仍由各自开关控制
+    elDate.style.display = (state.settings.showDate && m === 'clock') ? '' : 'none';
     countdownLine.style.display = state.settings.showCountdown !== false ? '' : 'none';
     // 正计时以秒为主要信息，忽略「显示秒数」开关；其余模式尊重开关
     elSecWrap.style.display = (state.settings.showSec || m === 'stopwatch') ? '' : 'none';
@@ -703,6 +705,10 @@
     state.settings.mode = mode;
     saveSettings();
     document.querySelectorAll('.modeBtn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    // v1.7.8：设置面板里的显示模式按钮同步高亮
+    document.querySelectorAll('#modeSwitchGroup .sideOpt').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.mode === mode);
     });
     updateVisibility();
@@ -749,9 +755,7 @@
   }
   function renderPomodoroTime() {
     const rem = U.pomodoroRemaining(state.pomodoro, Date.now());
-    elTH.textContent = pad(Math.floor(rem / 60));
-    elTM.textContent = pad(rem % 60);
-    elTS.textContent = '00'; // 从正计时切回时清掉残留秒数
+    applyDurationParts(rem, 'pomoTimeStyle');
   }
   function togglePomodoro() {
     if (state.pomodoro.isRunning) pausePomodoro(); else startPomodoro();
@@ -809,10 +813,24 @@
   /* ===== 正计时（绝对时间戳，不逐秒累加） ===== */
   function currentStopwatchSeconds() { return U.stopwatchElapsed(state.stopwatch, Date.now()); }
   function renderStopwatchTime() {
-    const t = U.splitHMS(currentStopwatchSeconds());
-    elTH.textContent = pad(t.h);
-    elTM.textContent = pad(t.m);
-    elTS.textContent = pad(t.s);
+    applyDurationParts(currentStopwatchSeconds(), 'swTimeStyle');
+  }
+
+  /* ===== v1.7.8：时长两段/三段自适应渲染 =====
+   * adaptive（默认）：< 1 小时显示 MM:SS；达到 1 小时自动变 H:MM:SS
+   * totalMinutes：始终 MM:SS，MM 为总分钟（可超过 59，如 75:00 表示 75 分钟）
+   * 隐藏小时段时同步隐藏翻页框暗段，避免数码管模式下错位 */
+  function applyDurationParts(totalSeconds, styleKey) {
+    const style = state.settings[styleKey] || 'adaptive';
+    const total = Math.max(0, Math.floor(totalSeconds));
+    const showH = style === 'totalMinutes' ? false : total >= 3600;
+    const h = Math.floor(total / 3600);
+    const m = showH ? Math.floor((total % 3600) / 60) : Math.floor(total / 60);
+    const s = total % 60;
+    elTime.classList.toggle('no-hour', !showH);
+    elTH.textContent = pad(showH ? h : 0);
+    elTM.textContent = pad(m);
+    elTS.textContent = pad(s);
   }
   function toggleStopwatch() {
     if (state.stopwatch.isRunning) pauseStopwatch(); else startStopwatch();
@@ -1397,6 +1415,8 @@
     if ($('#swMotto')) $('#swMotto').checked = !!state.settings.showMotto;
     if ($('#swCountdown')) $('#swCountdown').checked = state.settings.showCountdown !== false;
     if ($('#swSound')) $('#swSound').checked = !!state.settings.soundEnabled;
+    if ($('#swPomoTotalMin')) $('#swPomoTotalMin').checked = state.settings.pomoTimeStyle === 'totalMinutes';
+    if ($('#swStopwatchTotalMin')) $('#swStopwatchTotalMin').checked = state.settings.swTimeStyle === 'totalMinutes';
 
     if ($('#pomoWorkInput')) $('#pomoWorkInput').value = state.settings.pomoWorkMin || 25;
     if ($('#pomoBreakInput')) $('#pomoBreakInput').value = state.settings.pomoBreakMin || 5;
@@ -1866,6 +1886,32 @@
     });
     if ($('#pomoBreakUp')) $('#pomoBreakUp').addEventListener('click', () => updatePomoBreak((state.settings.pomoBreakMin || 5) + 1));
     if ($('#pomoBreakDown')) $('#pomoBreakDown').addEventListener('click', () => updatePomoBreak((state.settings.pomoBreakMin || 5) - 1));
+
+    /* v1.7.8：时长显示格式开关（总分钟 / 自适应）与触摸端显示模式切换 */
+    const swPomoTotalMin = $('#swPomoTotalMin');
+    if (swPomoTotalMin) swPomoTotalMin.addEventListener('change', function () {
+      state.settings.pomoTimeStyle = this.checked ? 'totalMinutes' : 'adaptive';
+      saveSettings(); renderCurrentMode();
+    });
+    const swStopwatchTotalMin = $('#swStopwatchTotalMin');
+    if (swStopwatchTotalMin) swStopwatchTotalMin.addEventListener('change', function () {
+      state.settings.swTimeStyle = this.checked ? 'totalMinutes' : 'adaptive';
+      saveSettings(); renderCurrentMode();
+    });
+    const modeSwitchGroup = $('#modeSwitchGroup');
+    if (modeSwitchGroup) {
+      if (!TOUCH) modeSwitchGroup.style.display = 'none'; // 桌面端用顶部模式栏与快捷键
+      modeSwitchGroup.querySelectorAll('.sideOpt').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.mode === state.settings.mode);
+        btn.addEventListener('click', function () {
+          const chosen = this.dataset.mode;
+          setMode(chosen);
+          modeSwitchGroup.querySelectorAll('.sideOpt').forEach((b) => {
+            b.classList.toggle('active', b.dataset.mode === chosen);
+          });
+        });
+      });
+    }
 
     /* 倒数日配置 */
     const targetTitleInput = $('#targetTitleInput');

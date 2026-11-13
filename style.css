@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.7') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.7') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.8') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.8') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -164,6 +164,11 @@ html.standalone #fsRoundBtn { display: none !important; }
 #time .sep { display: inline-flex; align-items: center; line-height: 1 }
 #time .sep::before { content: ""; display: inline-block; width: 0 }
 #time .unit { font-size: .42em; font-weight: 400; opacity: .72; margin: 0 .12em; display: inline-flex; align-items: center }
+/* v1.7.8：时长两段显示（<1h 的 MM:SS / 总分钟模式）隐藏小时段，翻页框暗段同步隐藏 */
+#time.no-hour > #tH,
+#time.no-hour > .sep.unit { display: none !important; }
+#time.no-hour #timeGhost > .g,
+#time.no-hour #timeGhost > .sep.unit { display: none !important; }
 .sec-wrap {
   font-size: .42em; opacity: .72; display: inline-flex; align-items: center; gap: .12em;
   align-self: flex-end; margin: 0 0 0 .12em;
