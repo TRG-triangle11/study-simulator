@@ -928,6 +928,8 @@
     state.zenMode = !state.zenMode;
     document.body.classList.toggle('zen-mode', state.zenMode);
     if (state.zenMode) { closeSettings(); closeFontDetail(); closeBgDetail(); }
+    /* v1.7.7：触摸设备没有 mousemove，进禅意后直接亮出退出按钮（桌面仍由鼠标感应控制） */
+    if (state.zenMode && TOUCH && zenExitBtn) zenExitBtn.classList.add('show');
     if (!state.zenMode && zenExitBtn) zenExitBtn.classList.remove('show');
   }
 
