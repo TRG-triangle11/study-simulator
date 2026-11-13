@@ -327,7 +327,7 @@
         fontEntry = $('#fontEntry'), feCurName = $('#feCurName'),
         fsBtn = $('#fsBtn'), fileInput = $('#fileInput');
 
-  const modeBar = $('#modeBar'), zenExitBtn = $('#zenExitBtn'),
+  const modeBar = $('#modeBar'),
         timerBadge = $('#timerBadge'), countdownLine = $('#countdownLine'),
         timerControls = $('#timerControls'), timerToggleBtn = $('#timerToggleBtn'),
         timerResetBtn = $('#timerResetBtn'), timerSkipBtn = $('#timerSkipBtn'),
@@ -942,13 +942,32 @@
   }
 
   /* ===== 禅意极简模式 ===== */
+  /* v1.7.9：退出改为「连点时钟中间三下」，进入时短暂提示；顶部常驻退出按钮已删除 */
+  let zenTapTimes = [];
+  let zenToastTimer = null;
+  function showZenToast(ms) {
+    const t = $('#zenToast');
+    if (!t) return;
+    t.classList.add('show');
+    clearTimeout(zenToastTimer);
+    zenToastTimer = setTimeout(() => t.classList.remove('show'), ms || 3800);
+  }
+  function registerZenTap() {
+    const now = Date.now();
+    zenTapTimes = zenTapTimes.filter((t) => now - t < 1600);
+    zenTapTimes.push(now);
+    if (zenTapTimes.length >= 3) {
+      zenTapTimes = [];
+      toggleZenMode();
+    } else if (zenTapTimes.length === 1) {
+      showZenToast(2200); // 点了第一下还没退，再提醒一次怎么退
+    }
+  }
   function toggleZenMode() {
     state.zenMode = !state.zenMode;
     document.body.classList.toggle('zen-mode', state.zenMode);
-    if (state.zenMode) { closeSettings(); closeFontDetail(); closeBgDetail(); }
-    /* v1.7.7：触摸设备没有 mousemove，进禅意后直接亮出退出按钮（桌面仍由鼠标感应控制） */
-    if (state.zenMode && TOUCH && zenExitBtn) zenExitBtn.classList.add('show');
-    if (!state.zenMode && zenExitBtn) zenExitBtn.classList.remove('show');
+    if (state.zenMode) { closeSettings(); closeFontDetail(); closeBgDetail(); showZenToast(); }
+    if (!state.zenMode) zenTapTimes = [];
   }
 
   /* ===== 日期与格式配置 ===== */
@@ -1671,8 +1690,6 @@
       const nearTop = e.clientY < 75;
       if (nearTop && !state.zenMode) { modeBar.classList.add('show'); clearTimeout(modeBarTimer); }
       else if (!nearTop) modeBar.classList.remove('show');
-      if (state.zenMode && nearTop) zenExitBtn.classList.add('show');
-      else zenExitBtn.classList.remove('show');
       const nearBottom = e.clientY > (window.innerHeight - 80);
       const nearCenter = Math.abs(e.clientX - window.innerWidth / 2) < 260;
       if (nearBottom && nearCenter && !state.zenMode) fsBtn.classList.add('show');
@@ -1793,7 +1810,7 @@
     });
     const zenBtn = $('#modeZenBtn');
     if (zenBtn) zenBtn.addEventListener('click', toggleZenMode);
-    if (zenExitBtn) zenExitBtn.addEventListener('click', toggleZenMode);
+    /* v1.7.9：顶部退出按钮已删除，禅意由键盘 Z/Esc 或连点时钟三下退出 */
 
     timerToggleBtn.addEventListener('click', () => {
       if (state.settings.mode === 'pomodoro') togglePomodoro();
@@ -1808,6 +1825,8 @@
 
     elClock.addEventListener('click', (e) => {
       if (e.target.closest('#timerControls') || e.target.closest('#mottoWrap')) return;
+      /* v1.7.9：禅意模式下连点时钟三下退出（不开设置） */
+      if (state.zenMode) { registerZenTap(); return; }
       openSettings();
     });
     elClock.addEventListener('keydown', (e) => {

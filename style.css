@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.8') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.8') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.9') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.9') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -901,32 +901,20 @@ body.zen-mode #clock {
   transform: none !important;
 }
 
-/* ===== 禅意模式退出悬浮按钮 ===== */
-#zenExitBtn {
-  display: none;
-  position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-12px); z-index: 25;
-  align-items: center; gap: 8px;
-  padding: 8px 20px; border-radius: 20px;
-  border: 1px solid var(--white-16);
-  background: rgba(12, 16, 22, .75); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  color: var(--white-85); font-size: 13px; font-family: inherit; letter-spacing: .06em;
-  cursor: pointer; opacity: 0; pointer-events: none;
+/* ===== 禅意模式退出提示（v1.7.9：顶部常驻退出按钮已删除，改为连点时钟三下退出） ===== */
+#zenToast {
+  position: fixed; bottom: calc(96px + var(--safe-bottom, 0px)); left: 50%;
+  transform: translateX(-50%) translateY(8px); z-index: 26;
+  padding: 9px 20px; border-radius: 20px;
+  border: 1px solid var(--white-14);
+  background: rgba(12, 16, 22, .78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  color: var(--white-80); font-size: 13px; font-family: inherit; letter-spacing: .06em;
+  pointer-events: none; opacity: 0;
   box-shadow: 0 4px 24px rgba(0,0,0,.5);
-  transition: opacity .25s ease, transform .25s var(--ease-out), background .2s ease;
+  transition: opacity .35s ease, transform .35s var(--ease-out);
 }
-#zenExitBtn:hover {
-  background: rgba(239, 68, 68, .2); border-color: rgba(239, 68, 68, .45); color: #fff;
-}
-#zenExitBtn .zenIcon {
-  font-size: 12px; opacity: .7;
-}
-
-body.zen-mode #zenExitBtn {
-  display: flex !important;
-}
-body.zen-mode #zenExitBtn.show {
-  opacity: 1 !important; pointer-events: auto !important;
-  transform: translateX(-50%) translateY(0);
+#zenToast.show {
+  opacity: 1; transform: translateX(-50%) translateY(0);
 }
 
 /* ===== 设置弹窗分栏选项卡 (固定置顶不动) ===== */
@@ -1200,11 +1188,11 @@ body.zen-mode #ambientPanel {
    ========================================================== */
 
 /* 隐藏浮层同步 visibility，使内部控件退出 Tab 顺序 */
-#settings, #onboard, #ambientPanel, #modeBar, #fsBtn, #zenExitBtn {
+#settings, #onboard, #ambientPanel, #modeBar, #fsBtn {
   visibility: hidden;
 }
 #settings.show, #onboard.show, #ambientPanel.show,
-#modeBar.show, #fsBtn.show, #zenExitBtn.show {
+#modeBar.show, #fsBtn.show {
   visibility: visible;
 }
 body.zen-mode #settings,
@@ -1249,11 +1237,6 @@ input, textarea {
    - 左右待办面板整体隐藏，待办在「设置 → 📅 日期待办 → 今日待办」中管理 */
 @media (hover: none) {
   .todoZone { display: none !important; }
-  /* v1.7.7：触摸设备进入禅意后，退出按钮常驻顶部（原逻辑靠 mousemove 触发，触摸设备永远不显示） */
-  body.zen-mode #zenExitBtn {
-    opacity: 1 !important; pointer-events: auto !important; visibility: visible !important;
-    transform: translateX(-50%) translateY(0) !important;
-  }
   .modeBtn, .modeZenBtn { padding: 6px 9px; font-size: 11px; }
 }
 
