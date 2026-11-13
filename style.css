@@ -1448,11 +1448,22 @@ body {
   #settingsBox { max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 12px); }
 }
 
-/* ===== v1.5.0：玻璃雨滴画布 ===== */
-#rainGlass {
-  position: fixed; inset: 0; z-index: 5;
+/* ===== v1.6.0：屏幕效果选项组 + 窗户雨滴画布 ===== */
+/* 与「秒数样式」同一套收起逻辑：关闭总开关时整块让位，不占高度 */
+.fxBody {
+  overflow: hidden; max-height: 640px; margin-top: 12px;
+  transition: max-height .28s ease, opacity .2s ease, margin-top .28s ease;
+}
+.fxBody.collapsed { max-height: 0; margin-top: 0; opacity: 0; pointer-events: none; }
+
+/* 窗户雨滴：叠在壁纸与暗化层之上、时钟之下。
+   放在时钟下面的原因：该库的折射采样是自己烘焙的壁纸纹理，水滴若压在数字上
+   会显示成「数字被挖掉一块」。放到文字层之下，时钟、日期、待办始终锐利，
+   雨滴则像窗外在下雨。 */
+#rainDropFx {
+  position: fixed; inset: 0; z-index: 1;
   width: 100%; height: 100%;
   pointer-events: none;
-  opacity: 0; transition: opacity .6s ease;
+  opacity: 0; transition: opacity .7s ease;
 }
-#rainGlass.on { opacity: 1; }
+#rainDropFx.on { opacity: 1; }

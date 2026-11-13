@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.5.0', () => assert.strictEqual(U.VERSION, '1.5.0'));
+check('版本号为 1.6.0', () => assert.strictEqual(U.VERSION, '1.6.0'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -81,7 +81,7 @@ check('JS 中引用的 #id 均存在于 index.html', () => {
 check('index.html 脚本加载顺序正确（util 最先）', () => {
   const html = read('index.html');
   const order = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1].split('?')[0]);
-  assert.deepStrictEqual(order, ['util.js', 'db.js', 'sound.js', 'ambient.js', 'particles.js', 'rain-glass.js', 'app.js']);
+  assert.deepStrictEqual(order, ['util.js', 'db.js', 'sound.js', 'ambient.js', 'particles.js', 'window-rain.js', 'app.js']);
 });
 check('模式栏为时钟 / 番茄钟 / 正计时 / 禅意，大时钟常驻', () => {
   const html = read('index.html');
@@ -258,21 +258,38 @@ check('v1.5.0：PWA 可安装（manifest / sw / 图标 / iOS 主屏）', () => {
   assert.ok(html.includes("/^https?:$/.test(location.protocol)"), 'SW 注册缺少协议判断');
 });
 
-check('v1.5.0：玻璃雨滴特效接入完整', () => {
+check('v1.6.0：屏幕效果总开关 + 窗户雨滴接入完整', () => {
   const html = read('index.html');
   const app = read('app.js');
-  const rain = read('rain-glass.js');
+  const fx = read('window-rain.js');
   const css = read('style.css');
-  assert.ok(html.includes('id="swGlassRain"'), '缺少玻璃雨滴开关');
-  assert.ok(html.includes('rain-glass.js'), '页面未加载 rain-glass.js');
-  assert.ok(app.includes('glassRain: false'), '缺少默认关闭设置');
-  assert.ok(app.includes('window.StudyGlassRain.setEnabled'), '开关未与特效联动');
-  assert.ok(app.includes('syncGlassRainBackdrop'), '壁纸变化未重新采样底图');
-  // 折射放大：水滴内部要绘制放大的背景切片
-  assert.ok(rain.includes('drawImage(backdrop'), '水滴未做背景折射采样');
-  assert.ok(rain.includes('devicePixelRatio'), '缺少高分屏适配');
-  assert.ok(rain.includes('visibilitychange'), '缺少后台暂停');
-  assert.ok(css.includes('#rainGlass'), '缺少画布层级样式');
+
+  // 结构：一个总开关 + 五个同级选项，「无」与旧的独立玻璃雨滴开关都已移除
+  assert.ok(html.includes('id="swScreenFx"'), '缺少屏幕效果总开关');
+  assert.ok(html.includes('data-effect="windowRain"'), '缺少窗户雨滴选项');
+  assert.ok(!html.includes('data-effect="none"'), '「无」选项应已删除');
+  assert.ok(!html.includes('swGlassRain'), '旧玻璃雨滴开关应已移除');
+  assert.ok(html.includes('window-rain.js'), '页面未加载 window-rain.js');
+
+  // 联动：统一刷新入口，开关与选项都走同一条链路
+  assert.ok(app.includes('function applyScreenFx'), '缺少统一刷新入口 applyScreenFx');
+  assert.ok(app.includes('window.StudyWindowRain.setEnabled'), '开关未与特效联动');
+  assert.ok(app.includes('syncWindowRainBackdrop'), '壁纸或暗化变化未重新采样底图');
+  assert.ok(app.includes("state.settings.screenFx = true"), '点选项未自动开启屏幕效果');
+  assert.ok(!app.includes('glassRain: false'), '旧默认项 glassRain 未清理');
+
+  // 第三方库：本地自托管 + 许可证 + 透明叠加改造 + 能力检测
+  assert.ok(fx.includes('assets/vendor/raindrop-fx.min.js'), '未引用本地 vendored 库');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/vendor/raindrop-fx.min.js')), '第三方库文件缺失');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/vendor/LICENSE-raindrop-fx.txt')), '第三方许可证缺失');
+  assert.ok(fx.includes('__overlay'), '未启用透明叠加改造');
+  assert.ok(fx.includes("getContext('webgl2')"), '缺少 WebGL2 能力检测');
+  assert.ok(fx.includes('visibilitychange'), '缺少后台暂停');
+  assert.ok(fx.includes('devicePixelRatio'), '缺少高分屏适配');
+
+  // 样式：画布层级 + 选项组收起
+  assert.ok(css.includes('#rainDropFx'), '缺少画布层级样式');
+  assert.ok(css.includes('.fxBody.collapsed'), '缺少选项组收起样式');
 });
 
 check('v1.5.0：窄屏排版与安全区', () => {

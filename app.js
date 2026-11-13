@@ -208,7 +208,7 @@
     todoSize: 14, todoOpacity: 0.6, showMotto: true, showCountdown: true,
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
     targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
-    particleEffect: 'none', rainSpeed: 2, rainDensity: 2, glassRain: false
+    particleEffect: 'rain', rainSpeed: 2, rainDensity: 2, screenFx: false
   }, loadSettings());
 
   // 兼容迁移历史版本废弃的壁纸 id
@@ -233,6 +233,15 @@
 
   // v1.3.4：倒数日模式已移除，旧设置回落到时钟；正计时重新作为独立模式
   if (!['clock', 'pomodoro', 'stopwatch'].includes(initialSettings.mode)) initialSettings.mode = 'clock';
+
+  // v1.6.0：特效改为「屏幕效果开关 + 同级选项」，旧的独立「玻璃雨滴」开关迁移为「窗户雨滴」选项
+  const FX_LIST = ['rain', 'snow', 'dust', 'fireflies', 'windowRain'];
+  if (initialSettings.glassRain) {
+    initialSettings.screenFx = true;
+    initialSettings.particleEffect = 'windowRain';
+  }
+  if (FX_LIST.indexOf(initialSettings.particleEffect) < 0) initialSettings.particleEffect = 'rain';
+  delete initialSettings.glassRain;
 
   /* ===== 计时器持久化状态 ===== */
   function defaultTimers(workSec) {
@@ -337,7 +346,7 @@
   function applyBg() {
     const url = resolveBg(state.settings.bg);
     elVignette.style.opacity = U.clamp(state.settings.dim, 0.15, 1, 0.62);
-    syncGlassRainBackdrop();
+    syncWindowRainBackdrop();
     if (url === _appliedBg) return;
 
     if (url === 'black') {
@@ -1051,6 +1060,19 @@
             tab: tab, el: g
           });
         });
+        // 细雨 / 飘雪 / 窗户雨滴等效果选项按钮也要能被搜到
+        pane.querySelectorAll('.particleOpt').forEach((btn) => {
+          const group = btn.closest('.sGroup');
+          const gLabel = group ? group.querySelector(':scope > .sLabel') : null;
+          const gText = gLabel ? clean(gLabel.textContent) : '';
+          const raw = (btn.textContent || '').replace(/\s+/g, ' ').trim();
+          items.push({
+            name: raw.replace(/^[^\u4e00-\u9fa5A-Za-z]+/, ''),
+            text: [raw, gText, tabTitle].join(' '),
+            path: tabTitle + (gText ? ' · ' + gText : ''),
+            tab: tab, el: btn
+          });
+        });
       });
       // 预处理：小写文本 + 拼音全拼 + 拼音首字母，供中文 / 拼音 / 首字母 / 模糊匹配
       // 名称单独再算一份：模糊（跳字）只对名称生效，否则长描述里的个别字母会凑出误命中
@@ -1376,10 +1398,11 @@
 
     syncSecStyleButtons();
     applySecStyle(); applyFlip();
-    const swRain = $('#swGlassRain');
-    if (swRain) swRain.checked = !!state.settings.glassRain;
+    const swFx = $('#swScreenFx');
+    if (swFx) swFx.checked = !!state.settings.screenFx;
     renderRemind('L'); renderRemind('R');
     applyDate(); applyMottoSetting(); updateVisibility(); updateDbHint();
+    applyScreenFx();
   }
 
   function openSettings() { refreshSettings(); settingsEl.classList.add('show'); }
@@ -1780,7 +1803,7 @@
       });
       dimRange.addEventListener('change', () => {
         state.settings.dim = parseInt(dimRange.value, 10) / 100; saveSettings();
-        syncGlassRainBackdrop();
+        syncWindowRainBackdrop();
       });
     }
 
@@ -1928,43 +1951,66 @@
     });
   }
 
-  /* ===== 氛围微动粒子 ===== */
-  /* ===== 玻璃雨滴（rain-glass.js） ===== */
-  function applyGlassRain() {
-    if (window.StudyGlassRain) window.StudyGlassRain.setEnabled(!!state.settings.glassRain);
+  /* ===== 氛围微动粒子 / 屏幕效果 ===== */
+  const FX_SUPPORTED = ['rain', 'snow', 'dust', 'fireflies', 'windowRain'];
+  const FX_HINT_DEFAULT = '前四种是轻量 Canvas 粒子；💧 窗户雨滴用 WebGL 实时折射，水滴里映出的是窗外壁纸，像隔着一层真玻璃';
+
+  /* 当前真正生效的效果名：屏幕效果关闭时一律为 none */
+  function activeFx() {
+    if (!state.settings.screenFx) return 'none';
+    const e = state.settings.particleEffect;
+    return FX_SUPPORTED.indexOf(e) >= 0 ? e : 'rain';
   }
 
-  /* 壁纸或暗化变化时，把新的底图交给水滴做折射采样 */
-  function syncGlassRainBackdrop() {
-    if (!window.StudyGlassRain) return;
+  /* 壁纸或暗化变化时，重新烘焙窗户雨滴的折射底图 */
+  function syncWindowRainBackdrop() {
+    if (!window.StudyWindowRain) return;
     const url = resolveBg(state.settings.bg);
-    window.StudyGlassRain.setBackdrop(url === 'black' ? '' : url, U.clamp(state.settings.dim, 0.15, 1, 0.62));
+    window.StudyWindowRain.setBackdrop(url === 'black' ? '' : url, U.clamp(state.settings.dim, 0.15, 1, 0.62));
   }
 
-  function initGlassRain() {
-    if (!window.StudyGlassRain) return;
-    window.StudyGlassRain.init();
-    syncGlassRainBackdrop();
-    applyGlassRain();
+  function windowRainUsable() {
+    return !!(window.StudyWindowRain && window.StudyWindowRain.isSupported());
+  }
 
-    const sw = $('#swGlassRain');
-    if (sw) {
-      sw.checked = !!state.settings.glassRain;
-      sw.addEventListener('change', function () {
-        state.settings.glassRain = this.checked;
-        saveSettings();
-        applyGlassRain();
-        if (this.checked) syncGlassRainBackdrop();
-      });
+  /* 统一入口：所有影响屏幕效果的设置变化都从这里刷新，避免「点了没反应」 */
+  function applyScreenFx() {
+    const fx = activeFx();
+    const isWindow = fx === 'windowRain';
+
+    if (window.StudyParticles) window.StudyParticles.setEffect(isWindow ? 'none' : fx);
+    if (isWindow) syncWindowRainBackdrop();
+    if (window.StudyWindowRain) window.StudyWindowRain.setEnabled(isWindow);
+
+    const body = $('#fxBody');
+    if (body) body.classList.toggle('collapsed', !state.settings.screenFx);
+
+    document.querySelectorAll('#particleOpts .particleOpt').forEach((b) => {
+      b.classList.toggle('active', b.dataset.effect === (state.settings.particleEffect || 'rain'));
+    });
+
+    const rainBox = $('#rainParamsBox');
+    if (rainBox) {
+      rainBox.style.display = (state.settings.screenFx && state.settings.particleEffect === 'rain') ? 'block' : 'none';
     }
   }
 
+  /* WebGL2 不可用时给出就地说明，不让用户以为「坏了」 */
+  function markWindowRainUnsupported() {
+    const hint = $('#fxHint');
+    if (!hint) return;
+    hint.textContent = '当前浏览器不支持 WebGL2，窗户雨滴无法启用。可换用较新的浏览器，或改用细雨、飘雪等粒子效果。';
+    hint.style.color = '#ffb4a2';
+  }
+
   function initParticles() {
-    if (!window.StudyParticles) return;
-    window.StudyParticles.init();
+    if (window.StudyParticles) window.StudyParticles.init();
+    if (window.StudyWindowRain) window.StudyWindowRain.init();
+    syncWindowRainBackdrop();
+
     const speedLabels = ['', '极慢静谧 (1档)', '舒缓细雨 (2档)', '适中雨势 (3档)', '较快降雨 (4档)', '急雨 (5档)'];
     const densityLabels = ['', '零星微雨 (1档)', '疏朗细雨 (2档)', '标准降雨 (3档)', '密集降雨 (4档)', '密雨倾盆 (5档)'];
-    const rainBox = $('#rainParamsBox'), rainSpeedRange = $('#rainSpeedRange'),
+    const rainSpeedRange = $('#rainSpeedRange'),
           rainDensityRange = $('#rainDensityRange'), rainSpeedVal = $('#rainSpeedVal'),
           rainDensityVal = $('#rainDensityVal');
 
@@ -1974,43 +2020,59 @@
       if (rainDensityRange) rainDensityRange.value = den;
       if (rainSpeedVal) rainSpeedVal.textContent = speedLabels[sp] || `${sp}档`;
       if (rainDensityVal) rainDensityVal.textContent = densityLabels[den] || `${den}档`;
-      if (rainBox) rainBox.style.display = state.settings.particleEffect === 'rain' ? 'block' : 'none';
     }
 
-    window.StudyParticles.setConfig({
-      rainSpeed: state.settings.rainSpeed || 2,
-      rainDensity: state.settings.rainDensity || 2
-    });
-    const eff = state.settings.particleEffect || 'none';
-    window.StudyParticles.setEffect(eff);
+    if (window.StudyParticles) {
+      window.StudyParticles.setConfig({
+        rainSpeed: state.settings.rainSpeed || 2,
+        rainDensity: state.settings.rainDensity || 2
+      });
+    }
     syncRainParamsUI();
+
     const motionHint = $('#motionHint');
     if (motionHint && REDUCED) motionHint.style.display = 'block';
 
+    /* 屏幕效果总开关：关掉后整块选项收起，画面完全静止 */
+    const swFx = $('#swScreenFx');
+    if (swFx) {
+      swFx.checked = !!state.settings.screenFx;
+      swFx.addEventListener('change', function () {
+        state.settings.screenFx = this.checked;
+        saveSettings();
+        applyScreenFx();
+      });
+    }
+
+    /* 效果选项：与「无」互斥的关系改由上面的总开关承担 */
     document.querySelectorAll('#particleOpts .particleOpt').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.effect === eff);
       btn.addEventListener('click', function () {
         const chosen = this.dataset.effect;
-        state.settings.particleEffect = chosen; saveSettings();
-        window.StudyParticles.setEffect(chosen);
-        document.querySelectorAll('#particleOpts .particleOpt').forEach((b) => {
-          b.classList.toggle('active', b.dataset.effect === chosen);
-        });
-        syncRainParamsUI();
+        if (chosen === 'windowRain' && !windowRainUsable()) {
+          markWindowRainUnsupported();
+          return;
+        }
+        state.settings.particleEffect = chosen;
+        state.settings.screenFx = true;   // 直接点选项即视为要开启
+        saveSettings();
+        applyScreenFx();
       });
     });
+
     if (rainSpeedRange) rainSpeedRange.addEventListener('input', function () {
       const val = parseInt(this.value, 10) || 2;
       state.settings.rainSpeed = val; saveSettings();
       if (rainSpeedVal) rainSpeedVal.textContent = speedLabels[val] || `${val}档`;
-      window.StudyParticles.setConfig({ rainSpeed: val });
+      if (window.StudyParticles) window.StudyParticles.setConfig({ rainSpeed: val });
     });
     if (rainDensityRange) rainDensityRange.addEventListener('input', function () {
       const val = parseInt(this.value, 10) || 2;
       state.settings.rainDensity = val; saveSettings();
       if (rainDensityVal) rainDensityVal.textContent = densityLabels[val] || `${val}档`;
-      window.StudyParticles.setConfig({ rainDensity: val });
+      if (window.StudyParticles) window.StudyParticles.setConfig({ rainDensity: val });
     });
+
+    applyScreenFx();
   }
 
   /* ===== 自定义暗黑主题目标日期选择器 ===== */
@@ -2171,7 +2233,6 @@
     initSettingsTabs();
     initAmbientMixer();
     initParticles();
-    initGlassRain();
     initCustomDatePicker();
     setupShortcuts();
     setupOnboard();
@@ -2183,6 +2244,7 @@
     window.addEventListener('resize', () => {
       clearTimeout(relayoutTimer);
       relayoutTimer = setTimeout(relayoutForViewport, 140);
+      if (window.StudyWindowRain) window.StudyWindowRain.resize();
     });
     hydrateTimers();
     setMode(state.settings.mode || 'clock', true); // 启动时不弹出模式栏

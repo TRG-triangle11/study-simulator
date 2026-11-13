@@ -1,5 +1,5 @@
 /**
- * sw.js — 自习模拟器 Service Worker (v1.5.0)
+ * sw.js — 自习模拟器 Service Worker (v1.6.0)
  *
  * 目标：装到手机主屏后离线也能打开、断网不白屏。
  * 策略：
@@ -7,26 +7,28 @@
  *   - 页面导航：网络优先（有网就拿到最新版），失败回落缓存
  *   - 其它同源资源：缓存优先（`?v=` 带版本号，内容不变），命中不到再走网络并顺手缓存
  *   - 壁纸等大图不预缓存，按需缓存，避免首次安装就下载十几 MB
+ *   - assets/vendor/raindrop-fx.min.js（180KB，仅窗户雨滴用到）同样按需缓存：
+ *     不启用窗户雨滴的用户不会被这笔下载拖慢首装，用过之后离线依然可用。
  *
  * 注意：File 协议（双击 index.html）下浏览器不注册 Service Worker，
  * 页面里已做协议判断，不会报错。
  */
 'use strict';
 
-const VERSION = '1.5.0';
+const VERSION = '1.6.0';
 const CACHE = 'study-sim-' + VERSION;
 
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.5.0',
-  './util.js?v=1.5.0',
-  './db.js?v=1.5.0',
-  './sound.js?v=1.5.0',
-  './ambient.js?v=1.5.0',
-  './particles.js?v=1.5.0',
-  './rain-glass.js?v=1.5.0',
-  './app.js?v=1.5.0',
+  './style.css?v=1.6.0',
+  './util.js?v=1.6.0',
+  './db.js?v=1.6.0',
+  './sound.js?v=1.6.0',
+  './ambient.js?v=1.6.0',
+  './particles.js?v=1.6.0',
+  './window-rain.js?v=1.6.0',
+  './app.js?v=1.6.0',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
