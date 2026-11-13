@@ -15,27 +15,27 @@
  */
 'use strict';
 
-const VERSION = '1.7.0';
+const VERSION = '1.7.1';
 const CACHE = 'study-sim-' + VERSION;
 
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.7.0',
-  './util.js?v=1.7.0',
-  './db.js?v=1.7.0',
-  './sound.js?v=1.7.0',
-  './ambient.js?v=1.7.0',
-  './particles.js?v=1.7.0',
-  './window-rain.js?v=1.7.0',
-  './app.js?v=1.7.0',
+  './style.css?v=1.7.1',
+  './util.js?v=1.7.1',
+  './db.js?v=1.7.1',
+  './sound.js?v=1.7.1',
+  './ambient.js?v=1.7.1',
+  './particles.js?v=1.7.1',
+  './window-rain.js?v=1.7.1',
+  './app.js?v=1.7.1',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
   './assets/icons/app-icon-maskable-512.png',
   './assets/icons/apple-touch-icon-180.png',
-  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.0',
-  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.0',
+  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.1',
+  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.1',
   './assets/fonts/dseg7-classic-700.woff2',
   './assets/fonts/dseg7-classic-400-normal.woff2',
   './assets/fonts/space-mono-700.woff2',

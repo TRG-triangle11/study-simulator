@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.0') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.0') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.1') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -122,7 +122,7 @@ body {
 #clock:hover { transform: scale(1.015) }
 #date {
   font-weight: 400; letter-spacing: .22em; color: var(--white-86);
-  margin-bottom: 34px; text-shadow: 0 1px 8px rgba(0,0,0,.5); font-size: 22px;
+  margin-bottom: 34px; text-shadow: 2px 2px 5px rgba(0,0,0,.55); font-size: 22px;
 }
 #date .dateWd { margin-left: .17em }
 #time {
@@ -803,7 +803,7 @@ input[type=range]::-moz-range-thumb {
 }
 #targetTitle {
   font-size: 20px; font-weight: 500; letter-spacing: .15em; color: var(--white-90);
-  margin-bottom: 24px; text-shadow: 0 1px 8px rgba(0,0,0,.5);
+  margin-bottom: 24px; text-shadow: 2px 2px 5px rgba(0,0,0,.55);
 }
 
 #timerControls {
@@ -835,7 +835,7 @@ input[type=range]::-moz-range-thumb {
 #mottoWrap:hover { opacity: 1 }
 #mottoText {
   font-size: 14px; letter-spacing: .08em; line-height: 1.6;
-  color: var(--white-85); font-style: italic; text-shadow: 0 1px 6px rgba(0,0,0,.6);
+  color: var(--white-85); font-style: italic; text-shadow: 2px 2px 4px rgba(0,0,0,.6);
   padding: 5px 14px; border-radius: 12px;
   transition: all .2s ease; cursor: pointer;
 }
@@ -1210,7 +1210,7 @@ input, textarea {
   color: var(--white-86);
   font-size: 22px;
   margin-bottom: 34px;
-  text-shadow: 0 1px 8px rgba(0,0,0,.5);
+  text-shadow: 2px 2px 5px rgba(0,0,0,.55);
   line-height: 1.5;
 }
 #clock #date { margin-bottom: 12px; }
