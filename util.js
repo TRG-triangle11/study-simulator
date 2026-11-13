@@ -15,7 +15,7 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
-  var VERSION = '1.7.4';
+  var VERSION = '1.7.5';
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
 

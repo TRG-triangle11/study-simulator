@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.4') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.4') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.5') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.5') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }

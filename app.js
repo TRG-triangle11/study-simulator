@@ -200,12 +200,12 @@
   }
 
   const initialSettings = Object.assign({
-    mode: 'clock', font: 'modern', size: 120, flip: false,
+    mode: 'clock', font: 'modern', size: 120, flip: true,
     bg: 'desk_sunny_real', dim: 0.62,
-    showSec: true, secStyle: 'compact',
+    showSec: true, secStyle: 'equal',
     showDate: true, dateSize: 22, dateSpacing: 0.22,
     showYear: true, showMonthDay: true, showWeekday: true,
-    todoSize: 14, todoOpacity: 0.6, todoSide: 'L', showMotto: true, showCountdown: true,
+    todoSize: 14, todoOpacity: 0.6, todoSide: 'L', showMotto: true, showCountdown: false,
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
     targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
     particleEffect: 'rain', rainSpeed: 2, rainDensity: 2, screenFx: false

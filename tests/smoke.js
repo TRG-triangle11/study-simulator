@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.7.4', () => assert.strictEqual(U.VERSION, '1.7.4'));
+check('版本号为 1.7.5', () => assert.strictEqual(U.VERSION, '1.7.5'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -388,7 +388,7 @@ check('字体方案已更新且倒计时开关存在', () => {
   assert.ok(app.includes('DSEG7 Classic'), '数码管未切换到 DSEG7 Classic');
   assert.ok(html.includes('id="swCountdown"'), '缺少倒计时开关');
   assert.ok(html.includes('id="timeGhost"'), '缺少七段暗段底层');
-  assert.ok(app.includes('showCountdown: true'), '缺少默认开启设置');
+  assert.ok(app.includes('showCountdown: false'), '默认应为关闭（v1.7.5 起新用户默认隐藏倒计时行）');
 });
 check('DEFAULT_BGS 引用的壁纸均存在', () => {
   const app = read('app.js');
