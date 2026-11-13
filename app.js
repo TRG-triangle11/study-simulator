@@ -18,22 +18,23 @@
 
   /* ===== 预设默认背景 ===== */
   const DEFAULT_BGS = [
-    { id: 'black',             name: '纯黑极简',       url: 'black' },
-    { id: 'desk_sunny_real',   name: '书桌·晴天·写实', url: 'assets/desk_sunny_real.jpg' },
-    { id: 'desk_sunny_anime',  name: '书桌·晴天·动漫', url: 'assets/desk_sunny_anime.jpg' },
-    { id: 'desk_rainy_real',   name: '书桌·雨天·写实', url: 'assets/desk_rainy_real.jpg' },
-    { id: 'desk_rainy_anime',  name: '书桌·雨天·动漫', url: 'assets/desk_rainy_anime.jpg' },
-    { id: 'desk_sunset_real',  name: '书桌·黄昏·写实', url: 'assets/desk_sunset_real.jpg' },
-    { id: 'desk_sunset_anime', name: '书桌·黄昏·动漫', url: 'assets/desk_sunset_anime.jpg' },
-    { id: 'desk_city_night2',  name: '书桌·高楼夜景',   url: 'assets/desk_city_night_real.jpg' },
-    { id: 'desk_city_night1',  name: '城市·皓月夜景',   url: 'assets/city_moon_night_real.jpg' },
-    { id: 'desk_field_day',    name: '窗前·碧绿田野',   url: 'assets/window_field_day_real.jpg' },
-    { id: 'desk_window_dusk',  name: '书桌·高楼黄昏',   url: 'assets/desk_city_dusk_real.jpg' },
-    { id: 'city_sunny',        name: '高楼俯瞰·白天',   url: 'assets/city_sunny_real.jpg' },
-    { id: 'city_night',        name: '高楼俯瞰·夜空',   url: 'assets/city_night_real.jpg' },
-    { id: 'field_sunny',       name: '田野·晴空·自然', url: 'assets/field_sunny_real.jpg' },
-    { id: 'field_sunny_anime', name: '田野·晴空·动漫', url: 'assets/field_sunny_anime.jpg' },
-    { id: 'field_night',       name: '田野·星夜·自然', url: 'assets/field_night_real.jpg' }
+    { id: 'black',             name: '默认·纯黑',      url: 'black' },
+    { id: 'desk_city_night2',  name: '高楼夜景',       url: 'assets/desk_city_night_real.jpg' },
+    { id: 'desk_city_night1',  name: '沿江高楼',       url: 'assets/city_moon_night_real.jpg' },
+    { id: 'desk_window_dusk',  name: '高楼黄昏',       url: 'assets/desk_city_dusk_real.jpg' },
+    { id: 'city_sunny',        name: '高楼俯瞰',       url: 'assets/city_sunny_real.jpg' },
+    { id: 'city_night',        name: '高楼俯瞰·夜空',  url: 'assets/city_night_real.jpg' },
+    /* v1.8.0：以下壁纸暂下架（图片待重新制作），保留名字占位，不可选 */
+    { id: 'desk_sunny_real',   name: '书桌·晴天·写实', unavailable: true },
+    { id: 'desk_sunny_anime',  name: '书桌·晴天·动漫', unavailable: true },
+    { id: 'desk_rainy_real',   name: '书桌·雨天·写实', unavailable: true },
+    { id: 'desk_rainy_anime',  name: '书桌·雨天·动漫', unavailable: true },
+    { id: 'desk_sunset_real',  name: '书桌·黄昏·写实', unavailable: true },
+    { id: 'desk_sunset_anime', name: '书桌·黄昏·动漫', unavailable: true },
+    { id: 'desk_field_day',    name: '窗前·碧绿田野',  unavailable: true },
+    { id: 'field_sunny',       name: '田野·晴空·自然', unavailable: true },
+    { id: 'field_sunny_anime', name: '田野·晴空·动漫', unavailable: true },
+    { id: 'field_night',       name: '田野·星夜·自然', unavailable: true }
   ];
 
   /* ===== 字体方案 ===== */
@@ -201,7 +202,7 @@
 
   const initialSettings = Object.assign({
     mode: 'clock', font: 'modern', size: 120, flip: true,
-    bg: 'desk_sunny_real', dim: 0.62,
+    bg: 'black', dim: 0.62,
     showSec: true, secStyle: 'equal',
     showDate: true, dateSize: 22, dateSpacing: 0.22,
     showYear: true, showMonthDay: true, showWeekday: true,
@@ -348,15 +349,25 @@
     setTimeout(() => { try { sp.remove(); } catch (e) { /* 忽略 */ } }, 600);
   }
 
+  /* v1.8.0：壁纸改版——只保留 6 张在用壁纸；其余暂下架（图片待重新制作），
+     保留名字占位且不可选。unavailable 条目 resolveBg 返回 null */
   function resolveBg(bgId) {
     const c = state.customBgs || [];
     for (let i = 0; i < c.length; i++) if (c[i].id === bgId) return c[i].url;
-    for (let j = 0; j < DEFAULT_BGS.length; j++) if (DEFAULT_BGS[j].id === bgId) return DEFAULT_BGS[j].url;
-    return DEFAULT_BGS[1].url;
+    for (let j = 0; j < DEFAULT_BGS.length; j++) {
+      if (DEFAULT_BGS[j].id === bgId) return DEFAULT_BGS[j].unavailable ? null : DEFAULT_BGS[j].url;
+    }
+    return 'black';
   }
 
   function applyBg() {
-    const url = resolveBg(state.settings.bg);
+    let url = resolveBg(state.settings.bg);
+    /* v1.8.0：当前壁纸已下架（图片待重制）则自动回落到默认·纯黑 */
+    if (url === null) {
+      state.settings.bg = 'black';
+      saveSettings();
+      url = 'black';
+    }
     elVignette.style.opacity = U.clamp(state.settings.dim, 0.15, 1, 0.62);
     syncWindowRainBackdrop();
     if (url === _appliedBg) return;
@@ -368,7 +379,6 @@
       dismissSplash();
       return;
     }
-    if (!url) return;
     elBg.style.backgroundColor = '';
     /* v1.7.3：先用 IndexedDB 里的本地副本秒显壁纸，不等网络——
        版本更新后网络慢时不再黑屏干等 */
@@ -397,8 +407,8 @@
       // v1.3：加载失败回退默认壁纸，不再留下永久空白
       console.warn('壁纸加载失败，回退默认壁纸:', url);
       _appliedBg = null;
-      if (state.settings.bg !== DEFAULT_BGS[1].id) {
-        state.settings.bg = DEFAULT_BGS[1].id;
+      if (state.settings.bg !== 'black') {
+        state.settings.bg = 'black';
         saveSettings();
       }
       applyBg();
@@ -490,7 +500,7 @@
           if (window.StudyDB) await window.StudyDB.deleteBg(b.id);
           if (b.objectUrl) URL.revokeObjectURL(b.objectUrl);
           state.customBgs = state.customBgs.filter((x) => x.id !== b.id);
-          if (state.settings.bg === b.id) { state.settings.bg = DEFAULT_BGS[1].id; _appliedBg = null; }
+          if (state.settings.bg === b.id) { state.settings.bg = 'black'; _appliedBg = null; }
           saveSettings(); buildBgGrid(); applyBg();
         };
       } else {
@@ -498,9 +508,18 @@
         tag.className = 'tag';
         tag.textContent = b.name;
         div.appendChild(tag);
-        div.onclick = () => {
-          state.settings.bg = b.id; saveSettings(); buildBgGrid(); applyBg();
-        };
+        /* v1.8.0：暂下架的壁纸只保留名字占位，不可选 */
+        if (b.unavailable) {
+          div.classList.add('off');
+          const note = document.createElement('span');
+          note.className = 'offNote';
+          note.textContent = '待重制';
+          div.appendChild(note);
+        } else {
+          div.onclick = () => {
+            state.settings.bg = b.id; saveSettings(); buildBgGrid(); applyBg();
+          };
+        }
       }
       grid.appendChild(div);
     });
@@ -2160,7 +2179,7 @@
   function syncWindowRainBackdrop() {
     if (!window.StudyWindowRain) return;
     const url = resolveBg(state.settings.bg);
-    window.StudyWindowRain.setBackdrop(url === 'black' ? '' : url, U.clamp(state.settings.dim, 0.15, 1, 0.62));
+    window.StudyWindowRain.setBackdrop(!url || url === 'black' ? '' : url, U.clamp(state.settings.dim, 0.15, 1, 0.62));
   }
 
   function windowRainUsable() {

@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.7.10', () => assert.strictEqual(U.VERSION, '1.7.10'));
+check('版本号为 1.8.0', () => assert.strictEqual(U.VERSION, '1.8.0'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -393,8 +393,13 @@ check('字体方案已更新且倒计时开关存在', () => {
 check('DEFAULT_BGS 引用的壁纸均存在', () => {
   const app = read('app.js');
   const urls = Array.from(app.matchAll(/url: '(assets\/[^']+)'/g), (m) => m[1]);
-  assert.ok(urls.length >= 15);
+  // v1.8.0：在用壁纸 5 张图 + 纯黑（无文件）；下架条目无 url 不会进此列表
+  assert.ok(urls.length === 5, '在用壁纸应为 5 张，实际 ' + urls.length);
   urls.forEach((p) => assert.ok(fs.existsSync(path.join(ROOT, p)), '缺少 ' + p));
+  // 下架壁纸保留名字占位
+  const names = ['默认·纯黑', '高楼夜景', '沿江高楼', '高楼黄昏', '高楼俯瞰', '高楼俯瞰·夜空'];
+  names.forEach((n) => assert.ok(app.includes("'" + n + "'"), '缺少改名后的壁纸 ' + n));
+  assert.ok((app.match(/unavailable: true/g) || []).length === 10, '下架壁纸应为 10 张');
 });
 check('1.2 历史版本快照完整', () => {
   ['README.md', 'app.js', 'db.js', 'index.html', 'style.css', 'ambient.js', 'particles.js', 'sound.js']

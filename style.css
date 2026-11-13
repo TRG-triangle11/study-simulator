@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.10') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.10') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.8.0') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.8.0') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -379,6 +379,9 @@ html.standalone #fsRoundBtn { display: none !important; }
    缩小字号并加大行高，让字形在卡片里的视觉高度与其他字体对齐 */
 .fdCard .fdPre.segment {
   font-size: 22px; line-height: 1.5; letter-spacing: .06em;
+  /* v1.8.0：DSEG7 数字字形在字符格内偏右（左侧空白实测≈0.56em，其他字体 0-2px），
+     平移校正使墨迹与其他四个字体的预览对齐 */
+  transform: translateX(-0.55em);
 }
 .fdCard .fdName { font-size: 11px; color: var(--white-50); margin-top: 6px; letter-spacing: .04em }
 .fdCard.active .fdName { color: rgba(76,175,125,.85) }
@@ -437,6 +440,15 @@ input[type=range]::-moz-range-thumb {
   position: absolute; left: 0; bottom: 0; right: 0;
   padding: 3px 6px; font-size: 10px; background: rgba(0,0,0,.55);
   color: var(--white-85); letter-spacing: .05em;
+}
+/* v1.8.0：暂下架壁纸（保留名字占位，待重制） */
+.bgCard.off { cursor: default; opacity: .38; }
+.bgCard.off:hover { transform: none; }
+.bgCard.off .offNote {
+  position: absolute; top: 6px; right: 6px;
+  font-size: 9px; color: var(--white-40);
+  border: 1px solid var(--white-12); border-radius: 6px;
+  padding: 1px 5px; letter-spacing: .08em;
 }
 .bgCard.upload {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
