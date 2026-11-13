@@ -357,10 +357,26 @@
     }
     if (!url) return;
     elBg.style.backgroundColor = '';
+    /* v1.7.3：先用 IndexedDB 里的本地副本秒显壁纸，不等网络——
+       版本更新后网络慢时不再黑屏干等 */
+    if (window.StudyDB && window.StudyDB.kvGet) {
+      window.StudyDB.kvGet('bg:' + url).then((blob) => {
+        if (blob && resolveBg(state.settings.bg) === url) {
+          elBg.style.backgroundImage = `url("${URL.createObjectURL(blob)}")`;
+          _appliedBg = url;
+        }
+      }).catch(() => {});
+    }
     const img = new Image();
     img.onload = () => {
       elBg.style.backgroundImage = `url("${url}")`;
       _appliedBg = url;
+      /* 顺手把壁纸存一份到本地（经 SW 媒体缓存命中，开销极小），供下次秒显 */
+      if (window.StudyDB && window.StudyDB.kvPut && !/^(blob:|data:)/.test(url)) {
+        fetch(url).then((r) => (r.ok ? r.blob() : null))
+          .then((b) => { if (b) return window.StudyDB.kvPut('bg:' + url, b); })
+          .catch(() => {});
+      }
     };
     img.onerror = () => {
       // v1.3：加载失败回退默认壁纸，不再留下永久空白

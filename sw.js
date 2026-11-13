@@ -15,27 +15,30 @@
  */
 'use strict';
 
-const VERSION = '1.7.2';
+const VERSION = '1.7.3';
 const CACHE = 'study-sim-' + VERSION;
+/* v1.7.3：壁纸等图片放独立媒体缓存，跨版本持久——
+   版本更新只重建外壳缓存，不再把几十 MB 的壁纸一起清掉重新下载 */
+const MEDIA_CACHE = 'study-sim-media';
 
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.7.2',
-  './util.js?v=1.7.2',
-  './db.js?v=1.7.2',
-  './sound.js?v=1.7.2',
-  './ambient.js?v=1.7.2',
-  './particles.js?v=1.7.2',
-  './window-rain.js?v=1.7.2',
-  './app.js?v=1.7.2',
+  './style.css?v=1.7.3',
+  './util.js?v=1.7.3',
+  './db.js?v=1.7.3',
+  './sound.js?v=1.7.3',
+  './ambient.js?v=1.7.3',
+  './particles.js?v=1.7.3',
+  './window-rain.js?v=1.7.3',
+  './app.js?v=1.7.3',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
   './assets/icons/app-icon-maskable-512.png',
   './assets/icons/apple-touch-icon-180.png',
-  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.2',
-  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.2',
+  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.3',
+  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.3',
   './assets/fonts/dseg7-classic-700.woff2',
   './assets/fonts/dseg7-classic-400-normal.woff2',
   './assets/fonts/space-mono-700.woff2',
@@ -55,7 +58,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k === CACHE ? null : caches.delete(k))));
+    await Promise.all(keys.map((k) => (k === CACHE || k === MEDIA_CACHE ? null : caches.delete(k))));
     await self.clients.claim();
   })());
 });
@@ -89,9 +92,13 @@ self.addEventListener('fetch', (event) => {
     if (hit) return hit;
     try {
       const res = await fetch(req);
-      if (res && res.ok && ['image', 'font', 'style', 'script'].indexOf(req.destination) >= 0) {
-        const cache = await caches.open(CACHE);
-        cache.put(req, res.clone());
+      if (res && res.ok) {
+        // 图片（壁纸等大文件）进跨版本持久的媒体缓存，其余进版本缓存
+        const name = req.destination === 'image' ? MEDIA_CACHE : CACHE;
+        if (['image', 'font', 'style', 'script'].indexOf(req.destination) >= 0) {
+          const cache = await caches.open(name);
+          cache.put(req, res.clone());
+        }
       }
       return res;
     } catch (err) {

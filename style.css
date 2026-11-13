@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.2') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.3') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.3') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -93,7 +93,11 @@ body {
 
 /* ===== 背景层 ===== */
 #bg {
-  position: fixed; inset: 0;
+  position: fixed; left: 0; right: 0;
+  /* v1.7.3：向状态栏 / Home 指示条区域各延伸一截，iPad PWA (black-translucent)
+     某些系统版本会为安全区留出实体黑带，壁纸必须铺到屏幕物理边缘才不露黑条 */
+  top: calc(-1 * var(--safe-top, 0px));
+  height: calc(100% + var(--safe-top, 0px) + var(--safe-bottom, 0px));
   background-size: cover; background-position: center; background-repeat: no-repeat;
   transition: opacity .5s ease; z-index: 0;
 }
@@ -1004,16 +1008,17 @@ body.zen-mode #zenExitBtn.show {
   opacity: 1; background: rgba(12, 16, 22, .8); color: #fff; transform: translateY(-1px);
 }
 #ambientBtn.playing {
-  opacity: .95; border-color: var(--color-accent); color: #fff;
-  box-shadow: 0 0 14px var(--color-accent-glow);
+  opacity: 1; color: #fff; border-color: rgba(255, 255, 255, .32);
+  background: rgba(28, 38, 52, .6);
 }
-#ambientBtn .soundDot {
-  position: absolute; top: 8px; right: 8px;
-  width: 6px; height: 6px; border-radius: 50%; background: transparent;
-  transition: all .25s ease;
+/* v1.7.3：播放中不再用右上角小圆点，改为图标加亮 + 带颜色的辉光阴影 */
+#ambientBtn.playing svg {
+  filter: drop-shadow(0 0 4px rgba(168, 214, 255, .85))
+          drop-shadow(0 0 11px rgba(120, 180, 255, .45));
 }
-#ambientBtn.playing .soundDot {
-  background: var(--color-accent); box-shadow: 0 0 8px var(--color-accent);
+#ambientBtn.playing:hover svg {
+  filter: drop-shadow(0 0 5px rgba(168, 214, 255, 1))
+          drop-shadow(0 0 14px rgba(120, 180, 255, .6));
 }
 
 /* ===== 全屏按钮（v1.7.2）：触摸设备右下角圆形；桌面隐藏仍用 #fsBtn ===== */
@@ -1079,6 +1084,20 @@ body.zen-mode #fsRoundBtn { visibility: hidden !important; pointer-events: none 
 }
 .ambTrack input[type=range] {
   flex: 1; height: 4px;
+}
+
+/* v1.7.3：触摸设备上混音台加大字号与间距，避免拥挤（桌面端不变） */
+@media (hover: none) {
+  #ambientPanel { width: 344px; padding: 24px; }
+  .ambHeader h3 { font-size: 16.5px; }
+  .ambPresets { gap: 10px; margin-bottom: 22px; }
+  .ambPresetBtn { font-size: 13px; padding: 11px 14px; min-height: 42px; }
+  .ambTrackList { gap: 18px; margin-bottom: 22px; }
+  .ambTrack { padding: 2px 0; }
+  .ambTrack .trLbl { font-size: 13.5px; width: 100px; }
+  .ambTrack input[type=range] { height: 7px; }
+  .ambMasterVolRow { font-size: 13.5px; gap: 12px; margin-bottom: 16px; }
+  .ambMasterVolRow span:last-child { width: 42px; }
 }
 
 /* 粒子选项胶囊 */

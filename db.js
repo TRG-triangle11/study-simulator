@@ -8,7 +8,7 @@
  *   - 自定义壁纸支持 Blob 存储
  */
 const DB_NAME = 'StudySimulatorDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const OPEN_TIMEOUT_MS = 4000;
 
 const U = window.StudyUtil;
@@ -49,6 +49,11 @@ function openDB() {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('custom_bgs')) {
         db.createObjectStore('custom_bgs', { keyPath: 'id' });
+      }
+      /* v1.7.3：key-value 存储，壁纸本地副本放这里（键 'bg:<url>'，值为 Blob），
+         启动时先读本地副本秒显壁纸，不等网络 */
+      if (!db.objectStoreNames.contains('kv')) {
+        db.createObjectStore('kv');
       }
       if (!db.objectStoreNames.contains('focus_records')) {
         const store = db.createObjectStore('focus_records', { keyPath: 'id', autoIncrement: true });
@@ -164,6 +169,26 @@ async function dbGetFocusRecords() {
   }
 }
 
+/** v1.7.3：key-value 存取（壁纸本地副本等） */
+function dbKvGet(key) {
+  return openDB().then((db) => new Promise((resolve, reject) => {
+    const tx = db.transaction('kv', 'readonly');
+    const req = tx.objectStore('kv').get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = (e) => reject(e.target.error || e);
+  }));
+}
+
+function dbKvPut(key, value) {
+  return openDB().then((db) => new Promise((resolve, reject) => {
+    const tx = db.transaction('kv', 'readwrite');
+    tx.objectStore('kv').put(value, key);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = (e) => reject(e.target.error || e);
+    tx.onabort = () => reject(tx.error || new Error('kv put aborted'));
+  }));
+}
+
 window.StudyDB = {
   openDB,
   probe: dbProbe,
@@ -172,5 +197,7 @@ window.StudyDB = {
   getAllBgs: dbGetAllBgs,
   deleteBg: dbDeleteBg,
   addFocusRecord: dbAddFocusRecord,
-  getFocusRecords: dbGetFocusRecords
+  getFocusRecords: dbGetFocusRecords,
+  kvGet: dbKvGet,
+  kvPut: dbKvPut
 };
