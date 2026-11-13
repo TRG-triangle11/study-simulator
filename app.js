@@ -208,7 +208,7 @@
     todoSize: 14, todoOpacity: 0.6, showMotto: true, showCountdown: true,
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
     targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
-    particleEffect: 'none', rainSpeed: 2, rainDensity: 2
+    particleEffect: 'none', rainSpeed: 2, rainDensity: 2, glassRain: false
   }, loadSettings());
 
   // 兼容迁移历史版本废弃的壁纸 id
@@ -337,6 +337,7 @@
   function applyBg() {
     const url = resolveBg(state.settings.bg);
     elVignette.style.opacity = U.clamp(state.settings.dim, 0.15, 1, 0.62);
+    syncGlassRainBackdrop();
     if (url === _appliedBg) return;
 
     if (url === 'black') {
@@ -584,8 +585,29 @@
 
   /* ===== 字号（监听器只绑定一次） ===== */
   let sizeBound = false;
+
+  /* 窄屏自适应：先按基准字号渲染，实测超宽再等比回缩，
+     避免手机上「大时钟 / 日期」超出屏幕被裁掉。 */
+  function fitToWidth(el, basePx, minPx) {
+    if (!el) return;
+    el.style.fontSize = basePx + 'px';
+    const avail = Math.max(80, window.innerWidth - 40);
+    const w = el.scrollWidth || 0;
+    if (w > avail) {
+      el.style.fontSize = Math.max(minPx, Math.floor(basePx * avail / w)) + 'px';
+    }
+  }
+
   function applyClockSize() {
-    elTime.style.fontSize = U.clamp(state.settings.size, 48, 200, 120) + 'px';
+    fitToWidth(elTime, U.clamp(state.settings.size, 48, 200, 120), 30);
+  }
+
+  /* 竖屏窄屏下统一重排一次字号（旋转屏幕、拖动窗口也会触发） */
+  let relayoutTimer = null;
+  function relayoutForViewport() {
+    applyClockSize();
+    applyDate();
+    renderCountdownLine();
   }
   function syncSize() {
     const px = U.clamp(state.settings.size, 48, 200, 120);
@@ -872,12 +894,15 @@
 
   /* ===== 日期与格式配置 ===== */
   function applyDate() {
-    elDate.style.fontSize = (state.settings.dateSize || 22) + 'px';
+    const dateBase = state.settings.dateSize || 22;
+    fitToWidth(elDate, dateBase, 11);
     $('#dateSizeVal').textContent = (state.settings.dateSize || 22) + 'px';
     $('#dateSizeOut').textContent = state.settings.dateSize || 22;
     let sp = state.settings.dateSpacing;
     if (sp === undefined) sp = 0.22;
-    elDate.style.letterSpacing = sp + 'em';
+    // 窄屏收紧字距，否则一行日期会横向溢出
+    const spEff = window.innerWidth < 560 ? Math.min(sp, 0.1) : sp;
+    elDate.style.letterSpacing = spEff + 'em';
     $('#dateSpacingVal').textContent = sp + 'em';
     $('#dateSpacingOut').textContent = sp;
     $('#dateSpacingRange').value = Math.round(sp * 100);
@@ -1351,6 +1376,8 @@
 
     syncSecStyleButtons();
     applySecStyle(); applyFlip();
+    const swRain = $('#swGlassRain');
+    if (swRain) swRain.checked = !!state.settings.glassRain;
     renderRemind('L'); renderRemind('R');
     applyDate(); applyMottoSetting(); updateVisibility(); updateDbHint();
   }
@@ -1753,6 +1780,7 @@
       });
       dimRange.addEventListener('change', () => {
         state.settings.dim = parseInt(dimRange.value, 10) / 100; saveSettings();
+        syncGlassRainBackdrop();
       });
     }
 
@@ -1901,6 +1929,36 @@
   }
 
   /* ===== 氛围微动粒子 ===== */
+  /* ===== 玻璃雨滴（rain-glass.js） ===== */
+  function applyGlassRain() {
+    if (window.StudyGlassRain) window.StudyGlassRain.setEnabled(!!state.settings.glassRain);
+  }
+
+  /* 壁纸或暗化变化时，把新的底图交给水滴做折射采样 */
+  function syncGlassRainBackdrop() {
+    if (!window.StudyGlassRain) return;
+    const url = resolveBg(state.settings.bg);
+    window.StudyGlassRain.setBackdrop(url === 'black' ? '' : url, U.clamp(state.settings.dim, 0.15, 1, 0.62));
+  }
+
+  function initGlassRain() {
+    if (!window.StudyGlassRain) return;
+    window.StudyGlassRain.init();
+    syncGlassRainBackdrop();
+    applyGlassRain();
+
+    const sw = $('#swGlassRain');
+    if (sw) {
+      sw.checked = !!state.settings.glassRain;
+      sw.addEventListener('change', function () {
+        state.settings.glassRain = this.checked;
+        saveSettings();
+        applyGlassRain();
+        if (this.checked) syncGlassRainBackdrop();
+      });
+    }
+  }
+
   function initParticles() {
     if (!window.StudyParticles) return;
     window.StudyParticles.init();
@@ -2113,6 +2171,7 @@
     initSettingsTabs();
     initAmbientMixer();
     initParticles();
+    initGlassRain();
     initCustomDatePicker();
     setupShortcuts();
     setupOnboard();
@@ -2121,6 +2180,10 @@
     preloadFonts();
     applyFont(); syncSize(); applyFlip(); applySecStyle(); syncSecStyleButtons();
     applyDate(); applyMottoSetting(); renderTodos();
+    window.addEventListener('resize', () => {
+      clearTimeout(relayoutTimer);
+      relayoutTimer = setTimeout(relayoutForViewport, 140);
+    });
     hydrateTimers();
     setMode(state.settings.mode || 'clock', true); // 启动时不弹出模式栏
     updateVisibility();

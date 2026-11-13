@@ -1,0 +1,100 @@
+/**
+ * sw.js — 自习模拟器 Service Worker (v1.5.0)
+ *
+ * 目标：装到手机主屏后离线也能打开、断网不白屏。
+ * 策略：
+ *   - 安装时预缓存「应用外壳」（页面、样式、脚本、字体、图标），保证首屏离线可用
+ *   - 页面导航：网络优先（有网就拿到最新版），失败回落缓存
+ *   - 其它同源资源：缓存优先（`?v=` 带版本号，内容不变），命中不到再走网络并顺手缓存
+ *   - 壁纸等大图不预缓存，按需缓存，避免首次安装就下载十几 MB
+ *
+ * 注意：File 协议（双击 index.html）下浏览器不注册 Service Worker，
+ * 页面里已做协议判断，不会报错。
+ */
+'use strict';
+
+const VERSION = '1.5.0';
+const CACHE = 'study-sim-' + VERSION;
+
+const SHELL = [
+  './',
+  './index.html',
+  './style.css?v=1.5.0',
+  './util.js?v=1.5.0',
+  './db.js?v=1.5.0',
+  './sound.js?v=1.5.0',
+  './ambient.js?v=1.5.0',
+  './particles.js?v=1.5.0',
+  './rain-glass.js?v=1.5.0',
+  './app.js?v=1.5.0',
+  './manifest.webmanifest',
+  './assets/icons/app-icon-192.png',
+  './assets/icons/app-icon-512.png',
+  './assets/icons/app-icon-maskable-512.png',
+  './assets/icons/apple-touch-icon-180.png',
+  './assets/fonts/harmonyos-sans-sc-regular.woff2',
+  './assets/fonts/harmonyos-sans-sc-bold.woff2',
+  './assets/fonts/dseg7-classic-700.woff2',
+  './assets/fonts/dseg7-classic-400-normal.woff2',
+  './assets/fonts/space-mono-700.woff2',
+  './assets/fonts/ibm-plex-mono-700.woff2',
+  './assets/fonts/outfit-700.woff2'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // 单个资源失败不阻断安装，避免某个文件缺失导致整个离线能力失效
+    await Promise.all(SHELL.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => null)));
+    await self.skipWaiting();
+  })());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => (k === CACHE ? null : caches.delete(k))));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  // 页面导航：网络优先，断网回落缓存首页
+  if (req.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(CACHE);
+        cache.put('./index.html', fresh.clone());
+        return fresh;
+      } catch (err) {
+        const cached = await caches.match('./index.html');
+        return cached || Response.error();
+      }
+    })());
+    return;
+  }
+
+  // 其它资源：缓存优先
+  event.respondWith((async () => {
+    const hit = await caches.match(req);
+    if (hit) return hit;
+    try {
+      const res = await fetch(req);
+      if (res && res.ok && ['image', 'font', 'style', 'script'].indexOf(req.destination) >= 0) {
+        const cache = await caches.open(CACHE);
+        cache.put(req, res.clone());
+      }
+      return res;
+    } catch (err) {
+      const loose = await caches.match(req, { ignoreSearch: true });
+      return loose || Response.error();
+    }
+  })());
+});

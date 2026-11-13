@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.4.6', () => assert.strictEqual(U.VERSION, '1.4.6'));
+check('版本号为 1.5.0', () => assert.strictEqual(U.VERSION, '1.5.0'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -81,7 +81,7 @@ check('JS 中引用的 #id 均存在于 index.html', () => {
 check('index.html 脚本加载顺序正确（util 最先）', () => {
   const html = read('index.html');
   const order = Array.from(html.matchAll(/<script src="([^"]+)"/g), (m) => m[1].split('?')[0]);
-  assert.deepStrictEqual(order, ['util.js', 'db.js', 'sound.js', 'ambient.js', 'particles.js', 'app.js']);
+  assert.deepStrictEqual(order, ['util.js', 'db.js', 'sound.js', 'ambient.js', 'particles.js', 'rain-glass.js', 'app.js']);
 });
 check('模式栏为时钟 / 番茄钟 / 正计时 / 禅意，大时钟常驻', () => {
   const html = read('index.html');
@@ -220,6 +220,68 @@ check('v1.4.0 新增：名句库 / 关闭秒针 / 壁纸浮窗 / 分组折叠', 
   assert.ok(app.includes('initGroupCollapse'), '缺少分组折叠逻辑');
   assert.ok(!html.includes('（自动补天数）') && !html.includes('（支持上下键调节或点击日历）'), '括号备注未删除');
   assert.ok(app.includes('preloadFonts'), '缺少字体预加载');
+});
+
+check('v1.5.0：PWA 可安装（manifest / sw / 图标 / iOS 主屏）', () => {
+  const html = read('index.html');
+  // 头部必需项
+  assert.ok(html.includes('viewport-fit=cover'), '缺少 viewport-fit=cover，刘海屏会留白');
+  assert.ok(html.includes('rel="manifest"'), '缺少 manifest 引用');
+  assert.ok(html.includes('apple-mobile-web-app-capable'), '缺少 iOS 全屏 meta');
+  assert.ok(html.includes('apple-touch-icon'), '缺少 iOS 主屏图标');
+  assert.ok(html.includes('name="theme-color"'), '缺少 theme-color');
+
+  // manifest 结构与图标文件
+  const manifest = JSON.parse(read('manifest.webmanifest'));
+  assert.strictEqual(manifest.display, 'standalone');
+  assert.ok(manifest.start_url && manifest.name, 'manifest 缺少 name / start_url');
+  const purposes = manifest.icons.map((i) => i.purpose || 'any');
+  assert.ok(purposes.includes('any') && purposes.includes('maskable'), 'manifest 缺少 any / maskable 图标');
+  manifest.icons.forEach((i) => {
+    const p = path.join(ROOT, i.src);
+    assert.ok(fs.existsSync(p), '缺少图标文件 ' + i.src);
+    const buf = fs.readFileSync(p);
+    assert.strictEqual(buf.slice(1, 4).toString('ascii'), 'PNG', i.src + ' 不是 PNG');
+  });
+
+  // Service Worker：预缓存清单里的文件都要真实存在，否则离线会缺件
+  const sw = read('sw.js');
+  const shell = (sw.match(/const SHELL = \[([\s\S]*?)\];/) || [])[1] || '';
+  const urls = Array.from(shell.matchAll(/'([^']+)'/g), (m) => m[1]).filter((u) => u.startsWith('./'));
+  assert.ok(urls.length >= 15, 'SW 预缓存清单过少');
+  urls.forEach((u) => {
+    const rel = u.replace(/^\.\//, '').split('?')[0];
+    if (!rel || rel === '') return;
+    assert.ok(fs.existsSync(path.join(ROOT, rel)), 'SW 预缓存了不存在的文件: ' + u);
+  });
+  // file:// 下不注册，避免控制台报错
+  assert.ok(html.includes("/^https?:$/.test(location.protocol)"), 'SW 注册缺少协议判断');
+});
+
+check('v1.5.0：玻璃雨滴特效接入完整', () => {
+  const html = read('index.html');
+  const app = read('app.js');
+  const rain = read('rain-glass.js');
+  const css = read('style.css');
+  assert.ok(html.includes('id="swGlassRain"'), '缺少玻璃雨滴开关');
+  assert.ok(html.includes('rain-glass.js'), '页面未加载 rain-glass.js');
+  assert.ok(app.includes('glassRain: false'), '缺少默认关闭设置');
+  assert.ok(app.includes('window.StudyGlassRain.setEnabled'), '开关未与特效联动');
+  assert.ok(app.includes('syncGlassRainBackdrop'), '壁纸变化未重新采样底图');
+  // 折射放大：水滴内部要绘制放大的背景切片
+  assert.ok(rain.includes('drawImage(backdrop'), '水滴未做背景折射采样');
+  assert.ok(rain.includes('devicePixelRatio'), '缺少高分屏适配');
+  assert.ok(rain.includes('visibilitychange'), '缺少后台暂停');
+  assert.ok(css.includes('#rainGlass'), '缺少画布层级样式');
+});
+
+check('v1.5.0：窄屏排版与安全区', () => {
+  const app = read('app.js');
+  const css = read('style.css');
+  assert.ok(app.includes('function fitToWidth'), '缺少窄屏字号回缩');
+  assert.ok(app.includes('relayoutForViewport'), '缺少旋转/缩放后的重排');
+  assert.ok(css.includes('env(safe-area-inset-top'), '缺少刘海安全区适配');
+  assert.ok(css.includes('100dvh'), '缺少动态视口高度（iOS 工具栏）适配');
 });
 
 console.log('\n[3] 资源文件完整性');
