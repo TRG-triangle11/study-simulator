@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.5') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.5') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.6') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.6') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -1521,6 +1521,15 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
+
+/* v1.7.6：iOS/iPadOS PWA「视口谎言」修复（WebKit Bug 313800）
+   添加到主屏幕后，布局视口比物理屏幕矮一截，100%/dvh 都解析为偏短值，
+   底部留出一条 CSS 画不到的黑带（Safari 网页与网页全屏视口正确故无此问题）。
+   解法：用恒等于真实屏幕高度的 100vh 把 html/body 撑高 1px，
+   1px 溢出强制 WebKit 把视口重算到真实屏幕高度，黑带随之消失。
+   不用 dvh——键盘收起时 dvh 变化会反复触发重排动画。 */
+html.standalone, html.standalone body { height: calc(100vh + 1px); }
+html.standalone #bg { top: 0; height: 100vh; height: 100lvh; }
 
 /* 窄屏（手机竖屏）：面板与浮窗改为几乎全屏，底部留出安全区 */
 @media (max-width: 560px) {
