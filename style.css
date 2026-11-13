@@ -1,8 +1,8 @@
 /* ===== 自习模拟器 — style.css ===== */
 
 /* ===== 自托管本地字体声明（全部 SIL OFL，可离线自由分发） ===== */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.3') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.3') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.7.4') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.7.4') format('woff2'); }
 
 /* 以下字体每个文件同时声明 400 / 700，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -109,6 +109,33 @@ body {
   transition: opacity .5s ease;
   pointer-events: none;
 }
+
+/* ===== App 启动页（v1.7.4：仅添加到主屏幕的 App 显示，网页模式无感） ===== */
+#splash { display: none; }
+html.standalone #splash {
+  display: flex; position: fixed; inset: 0; z-index: 99;
+  flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  background: var(--color-bg);
+  opacity: 1; transition: opacity .45s ease;
+}
+html.standalone #splash.gone {
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .45s ease, visibility 0s linear .45s;
+}
+#splash .spIcon { color: var(--white-86); }
+#splash .spName {
+  font-size: 17px; font-weight: 500; letter-spacing: .3em; margin-left: .3em;
+  color: var(--white-70);
+}
+#splash .spSpin {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--white-15); border-top-color: var(--white-70);
+  animation: spSpin .8s linear infinite;
+}
+@keyframes spSpin { to { transform: rotate(360deg); } }
+
+/* App 模式默认已全屏：隐藏右下角圆形全屏按钮（浏览器网页版保留） */
+html.standalone #fsRoundBtn { display: none !important; }
 
 
 /* ===== 主时钟 ===== */

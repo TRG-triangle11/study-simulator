@@ -336,6 +336,17 @@
   let _appliedBg = null;
   let lazyObserver = null;
 
+  /* v1.7.4：App 模式启动页在壁纸就绪后淡出（网页模式 splash 从不显示，调用无副作用） */
+  let _splashGone = false;
+  function dismissSplash() {
+    if (_splashGone) return;
+    _splashGone = true;
+    const sp = document.getElementById('splash');
+    if (!sp) return;
+    sp.classList.add('gone');
+    setTimeout(() => { try { sp.remove(); } catch (e) { /* 忽略 */ } }, 600);
+  }
+
   function resolveBg(bgId) {
     const c = state.customBgs || [];
     for (let i = 0; i < c.length; i++) if (c[i].id === bgId) return c[i].url;
@@ -353,6 +364,7 @@
       elBg.style.backgroundImage = 'none';
       elBg.style.backgroundColor = '#0a0c10';
       _appliedBg = 'black';
+      dismissSplash();
       return;
     }
     if (!url) return;
@@ -364,6 +376,7 @@
         if (blob && resolveBg(state.settings.bg) === url) {
           elBg.style.backgroundImage = `url("${URL.createObjectURL(blob)}")`;
           _appliedBg = url;
+          dismissSplash();
         }
       }).catch(() => {});
     }
@@ -371,6 +384,7 @@
     img.onload = () => {
       elBg.style.backgroundImage = `url("${url}")`;
       _appliedBg = url;
+      dismissSplash();
       /* 顺手把壁纸存一份到本地（经 SW 媒体缓存命中，开销极小），供下次秒显 */
       if (window.StudyDB && window.StudyDB.kvPut && !/^(blob:|data:)/.test(url)) {
         fetch(url).then((r) => (r.ok ? r.blob() : null))
@@ -2363,6 +2377,7 @@
     tick(); // 立即渲染并启动唯一心跳
 
     initBackgroundStorage(); // 异步，不阻塞上面的渲染
+    setTimeout(dismissSplash, 2800); // 兜底：壁纸迟迟未就绪也按时淡出启动页
     window.addEventListener('pagehide', onPageHide);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
     if (!TOUCH) armHide();
