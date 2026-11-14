@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.9.2', () => assert.strictEqual(U.VERSION, '1.9.2'));
+check('版本号为 1.9.3', () => assert.strictEqual(U.VERSION, '1.9.3'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -399,6 +399,22 @@ check('v1.9.2 补：Outfit 保留真无级连续滑块', () => {
   assert.ok(app.includes('weightLabel(fn, w)'), '可变字体缺少状态词显示');
   // 固定档位字体仍按档位跳，单档字体仍隐藏
   assert.ok(app.includes('range.min = 0; range.max = stops.length - 1'), '固定档位字体被误改成连续');
+});
+
+check('v1.9.3：iPad 字体回退修复 + 触摸端滑块松手恢复', () => {
+  const css = read('style.css');
+  const app = read('app.js');
+  // 静态字体不再无条件背负可变字体属性
+  const timeBlock = (css.match(/#time \{([\s\S]*?)\}/) || [])[1] || '';
+  assert.ok(!/font-variation-settings/.test(timeBlock), '#time 仍无条件带 font-variation-settings');
+  assert.ok(css.includes('html.font-variable #time'), '缺少可变字体条件规则');
+  assert.ok(app.includes("classList.toggle('font-variable', !!fn.variable)"), 'JS 未按字体打标记');
+  // 字体备用裸地址
+  assert.ok(css.includes("format('woff2'), url('assets/fonts/harmonyos-sans-sc-regular.woff2')"), '缺少裸 URL 备用地址');
+  // 触摸端松手恢复
+  assert.ok(app.includes("['change', 'pointerup', 'touchend', 'pointercancel', 'blur']"), '滑块缺少多事件恢复');
+  assert.ok(app.includes('undimTimer = setTimeout(undim, 700)'), '缺少防抖自动恢复');
+  assert.ok(app.includes("document.addEventListener('touchend', undim)"), '缺少手指滑出后的兜底');
 });
 
 check('CSS 引用的字体文件均存在', () => {

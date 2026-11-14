@@ -673,6 +673,11 @@
     /* 统一挂在根元素：#time、翻页暗段、秒数预览一并继承，天然同步不错位 */
     const w = clockWeightEffective(fn);
     const rootEl = document.documentElement;
+    /* v1.9.3：仅真可变字体（Outfit）启用 font-variation-settings。
+       静态字体带上该属性会被 iPad Safari 判定为不匹配，整体回退系统字体。 */
+    if (rootEl.classList && typeof rootEl.classList.toggle === 'function') {
+      rootEl.classList.toggle('font-variable', !!fn.variable);
+    }
     if (rootEl.style && typeof rootEl.style.setProperty === 'function') {
       rootEl.style.setProperty('--clock-weight', String(w));
     } else {
@@ -2113,12 +2118,30 @@
       });
     }
 
+    /* v1.9.3：拖动滑块时设置面板半透明，方便看时钟变化。
+       触摸设备既没有 mouseleave、change 也常不触发，导致松手后一直半透明。
+       用「指针抬起 / 触摸结束」立即恢复 + 停止输入 0.7 秒自动恢复双保险。 */
     const ranges = document.querySelectorAll('#settingsBox input[type=range]');
+    let undimTimer = null;
+    const undim = () => {
+      clearTimeout(undimTimer);
+      settingsBox.classList.remove('dim');
+    };
     ranges.forEach((r) => {
-      r.addEventListener('input', () => settingsBox.classList.add('dim'));
-      r.addEventListener('change', () => settingsBox.classList.remove('dim'));
+      r.addEventListener('input', () => {
+        settingsBox.classList.add('dim');
+        clearTimeout(undimTimer);
+        undimTimer = setTimeout(undim, 700);
+      });
+      ['change', 'pointerup', 'touchend', 'pointercancel', 'blur'].forEach((evt) => {
+        r.addEventListener(evt, undim);
+      });
     });
-    settingsBox.addEventListener('mouseleave', () => settingsBox.classList.remove('dim'));
+    /* 手指滑出滑块范围再抬起时，滑块自身收不到抬起事件 */
+    document.addEventListener('pointerup', undim);
+    document.addEventListener('touchend', undim);
+    document.addEventListener('pointercancel', undim);
+    settingsBox.addEventListener('mouseleave', undim);
 
     document.querySelectorAll('#secStyleOpts .posOpt').forEach((b) => {
       b.addEventListener('click', function () {

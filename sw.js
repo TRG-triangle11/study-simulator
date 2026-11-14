@@ -1,5 +1,5 @@
 /**
- * sw.js — 自习模拟器 Service Worker (v1.9.2)
+ * sw.js — 自习模拟器 Service Worker (v1.9.3)
  *
  * 目标：装到手机主屏后离线也能打开、断网不白屏。
  * 策略：
@@ -15,7 +15,7 @@
  */
 'use strict';
 
-const VERSION = '1.9.2';
+const VERSION = '1.9.3';
 const CACHE = 'study-sim-' + VERSION;
 /* v1.7.3：壁纸等图片放独立媒体缓存，跨版本持久——
    版本更新只重建外壳缓存，不再把几十 MB 的壁纸一起清掉重新下载 */
@@ -24,31 +24,31 @@ const MEDIA_CACHE = 'study-sim-media';
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.9.2',
-  './util.js?v=1.9.2',
-  './db.js?v=1.9.2',
-  './sound.js?v=1.9.2',
-  './ambient.js?v=1.9.2',
-  './particles.js?v=1.9.2',
-  './window-rain.js?v=1.9.2',
-  './app.js?v=1.9.2a',
+  './style.css?v=1.9.3',
+  './util.js?v=1.9.3',
+  './db.js?v=1.9.3',
+  './sound.js?v=1.9.3',
+  './ambient.js?v=1.9.3',
+  './particles.js?v=1.9.3',
+  './window-rain.js?v=1.9.3',
+  './app.js?v=1.9.3',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
   './assets/icons/app-icon-maskable-512.png',
   './assets/icons/apple-touch-icon-180.png',
   /* v1.9.0：HarmonyOS 6 档真实字重 + Outfit 可变字体（按需加载，未用到的字重不会预下载） */
-  './assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.2',
-  './assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.2',
-  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.2',
-  './assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.2',
-  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.2',
-  './assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.2',
+  './assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.3',
+  './assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.3',
+  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.3',
+  './assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.3',
+  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.3',
+  './assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.3',
   './assets/fonts/dseg7-classic-700.woff2',
   './assets/fonts/dseg7-classic-400-normal.woff2',
   './assets/fonts/space-mono-700.woff2',
   './assets/fonts/ibm-plex-mono-700.woff2',
-  './assets/fonts/outfit-variable.woff2?v=1.9.2'
+  './assets/fonts/outfit-variable.woff2?v=1.9.3'
 ];
 
 self.addEventListener('install', (event) => {
