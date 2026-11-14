@@ -390,6 +390,17 @@ check('v1.9.2：名句脱离文档流，开关不影响时钟位置', () => {
   assert.ok(/#mottoWrap \{ display: none !important/.test(css), '横屏矮屏名句仍会溢出屏幕');
 });
 
+check('v1.9.2 补：Outfit 保留真无级连续滑块', () => {
+  const app = read('app.js');
+  assert.ok(/id: 'outfit'[\s\S]{0,200}variable: true/.test(app), 'Outfit 未标记为可变字体');
+  assert.ok(app.includes('if (fn && fn.variable) return clockWeightValue()'), '可变字体未恢复连续字重');
+  assert.ok(app.includes('range.min = 100; range.max = 900; range.step = 1'), 'Outfit 滑块不是连续式');
+  assert.ok(app.includes('state.settings.clockWeight = U.clamp(parseInt(wr.value, 10) || 700, 100, 900, 700)'), '连续滑块写入逻辑缺失');
+  assert.ok(app.includes('weightLabel(fn, w)'), '可变字体缺少状态词显示');
+  // 固定档位字体仍按档位跳，单档字体仍隐藏
+  assert.ok(app.includes('range.min = 0; range.max = stops.length - 1'), '固定档位字体被误改成连续');
+});
+
 check('CSS 引用的字体文件均存在', () => {
   const css = read('style.css');
   const urls = Array.from(css.matchAll(/url\('(assets\/[^']+)'\)/g), (m) => m[1].split('?')[0]);

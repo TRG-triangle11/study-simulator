@@ -37,7 +37,7 @@
     { id: 'field_night',       name: '田野·星夜·自然', unavailable: true }
   ];
 
-  /* ===== 字体方案（v1.9.1：Outfit 提到第二位；stops 为该字体真实可调节的字重档位） ===== */
+  /* ===== 字体方案（Outfit 第二位、真可变字体；stops 为固定档位 / 状态词表） ===== */
   const FONTS = [
     { id: 'modern',     name: '现代无衬线 (HarmonyOS)',    css: '"HarmonyOS Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif', sample: '12:34:56',
       stops: [{ w: 100, label: '极细' }, { w: 300, label: '细' }, { w: 400, label: '常规' }, { w: 500, label: '中等' }, { w: 700, label: '粗' }, { w: 900, label: '极粗' }] },
@@ -604,10 +604,12 @@
     const ghostSec = ghost.querySelector('.sec-wrap');
     if (ghostSec) ghostSec.style.display = elSecWrap.style.display;
   }
-  /* ===== v1.9.1：时间字体粗细（按真实档位滑动，只显示状态词） =====
-   * 滑块只在当前字体实际支持的字重之间跳，界面不出现 100–900 之类数字；
-   * 只有单档字重的字体（Space Mono / IBM Plex Mono）整组隐藏，因为调了没有效果；
-   * 写进 CSS 变量的永远是真实存在的一档，绝不伪造加粗。 */
+  /* ===== v1.9.2：时间字体粗细 =====
+   * - Outfit 是真可变字体：滑块连续无级（100–900 任意值都是真实字形），
+   *   界面只显示就近的状态词（极细 / 细 / …），不显示数字；
+   * - HarmonyOS / DSEG7 只有固定档位：滑块按档位跳，同样只显示状态词；
+   * - Space Mono / IBM Plex Mono 只有单档，整组隐藏（调了没有效果）；
+   * - 写进 CSS 变量的永远是该字体真实能渲染的字重，绝不伪造加粗。 */
   function currentFont() {
     return FONTS.find((x) => x.id === state.settings.font) || FONTS[0];
   }
@@ -627,7 +629,12 @@
     });
     return idx;
   }
+  function weightLabel(fn, w) {
+    const stops = weightStops(fn);
+    return stops ? stops[weightIndex(fn, w)].label : '';
+  }
   function clockWeightEffective(fn) {
+    if (fn && fn.variable) return clockWeightValue();   // 可变字体：真连续无级
     const stops = weightStops(fn);
     return stops ? stops[weightIndex(fn, clockWeightValue())].w : ((fn && fn.fixed) || 700);
   }
@@ -641,12 +648,22 @@
       return;
     }
     if (group) group.style.display = '';
-    const idx = weightIndex(fn, clockWeightValue());
-    if (range) {
-      range.min = 0; range.max = stops.length - 1; range.step = 1;
-      range.value = idx;
+    const w = clockWeightValue();
+    let label;
+    if (fn.variable) {
+      /* 真无级：滑块连续，任何数值都写进可变字体的 wght 轴；文字用最近的状态词 */
+      if (range) {
+        range.min = 100; range.max = 900; range.step = 1; range.value = w;
+      }
+      label = weightLabel(fn, w);
+    } else {
+      const idx = weightIndex(fn, w);
+      if (range) {
+        range.min = 0; range.max = stops.length - 1; range.step = 1;
+        range.value = idx;
+      }
+      label = stops[idx].label;
     }
-    const label = stops[idx].label;
     if (out) out.textContent = label;
     if (val) val.textContent = label;
   }
@@ -749,13 +766,18 @@
       saveSettings(); applyClockSize();
     });
 
-    /* v1.9.1：字重滑块按「档位索引」滑动，值只可能是当前字体的真实字重 */
+    /* v1.9.2：可变字体连续无级；固定档位字体按档位索引跳 */
     const wr = $('#clockWeightRange');
     if (wr) wr.addEventListener('input', () => {
-      const stops = weightStops(currentFont());
-      if (!stops) return;
-      const i = U.clamp(parseInt(wr.value, 10) || 0, 0, stops.length - 1, 0);
-      state.settings.clockWeight = stops[i].w;
+      const fn = currentFont();
+      if (fn.variable) {
+        state.settings.clockWeight = U.clamp(parseInt(wr.value, 10) || 700, 100, 900, 700);
+      } else {
+        const stops = weightStops(fn);
+        if (!stops) return;
+        const i = U.clamp(parseInt(wr.value, 10) || 0, 0, stops.length - 1, 0);
+        state.settings.clockWeight = stops[i].w;
+      }
       saveSettings();
       applyFont();
     });
