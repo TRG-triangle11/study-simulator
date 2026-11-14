@@ -31,7 +31,7 @@ const SHELL = [
   './ambient.js?v=1.9.1',
   './particles.js?v=1.9.1',
   './window-rain.js?v=1.9.1',
-  './app.js?v=1.9.1',
+  './app.js?v=1.9.1a',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',

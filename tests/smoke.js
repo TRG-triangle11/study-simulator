@@ -359,6 +359,27 @@ check('v1.7.2：PWA 黑边修复 + 按钮移位 + 数码管预览', () => {
 });
 
 console.log('\n[3] 资源文件完整性');
+check('v1.9.1：字体顺序 / 字重档位滑块 / 单档字体隐藏', () => {
+  const app = read('app.js');
+  const html = read('index.html');
+  // Outfit 移到第二位，其余顺移
+  const fontsBlock = (app.match(/const FONTS = \[([\s\S]*?)\n  \];/) || [])[1] || '';
+  const order = Array.from(fontsBlock.matchAll(/\{ id: '(\w+)'/g), (m) => m[1]);
+  assert.deepStrictEqual(order, ['modern', 'outfit', 'dseg7', 'spacemono', 'plexmono'], '字体顺序不符');
+  // 档位滑块（索引 0..n-1），界面不出现 100-900 数字与说明行
+  assert.ok(html.includes('id="clockWeightRange" min="0" max="5" step="1"'), '字重滑块不是档位式');
+  assert.ok(html.includes('<output id="clockWeightOut">粗</output>'), '输出仍显示数字');
+  assert.ok(!html.includes('clockWeightHint'), '仍显示字重说明行');
+  assert.ok(!app.includes('WEIGHT_LABELS'), '旧的无级字重映射未移除');
+  // 只显示状态词；写入 CSS 变量的必须是真实档位
+  assert.ok(app.includes('if (out) out.textContent = label'), '滑块输出未改为状态词');
+  assert.ok(app.includes('clockWeightEffective(fn)'), 'CSS 变量未使用真实档位字重');
+  // 单档字体整组隐藏，且隐藏项不进搜索结果
+  assert.ok(html.includes('id="clockWeightGroup"'), '缺少可隐藏的设置组容器');
+  assert.ok(app.includes("group.style.display = 'none'"), '单档字体未隐藏字重组');
+  assert.ok(app.includes("if (g.style.display === 'none') return"), '隐藏设置项仍会被搜索命中');
+});
+
 check('CSS 引用的字体文件均存在', () => {
   const css = read('style.css');
   const urls = Array.from(css.matchAll(/url\('(assets\/[^']+)'\)/g), (m) => m[1].split('?')[0]);
