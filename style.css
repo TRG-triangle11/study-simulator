@@ -4,12 +4,12 @@
  * HarmonyOS Sans SC 官方只分发静态字重（许可禁止修改/衍生），
  * 这里把 6 个官方字重各自裁剪到项目字符集，由浏览器按 weight 就近选用；
  * Outfit 是 SIL OFL 可变字体，自托管 wght 100-900 真无级。 */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 100; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.0') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 300; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.0') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.0') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 500; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.0') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.0') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 900; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.0') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 100; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 300; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 500; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 900; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.1') format('woff2'); }
 
 /* 以下字体为固定字重：400/700 声明各自文件，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -19,7 +19,7 @@
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
 /* Outfit 可变字体：wght 轴 100-900，字体粗细可连续变化 */
-@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('assets/fonts/outfit-variable.woff2?v=1.9.0') format('woff2'); }
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('assets/fonts/outfit-variable.woff2?v=1.9.1') format('woff2'); }
 
 /* ===== CSS 变量 ===== */
 :root {
