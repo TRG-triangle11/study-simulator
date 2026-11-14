@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.8.0', () => assert.strictEqual(U.VERSION, '1.8.0'));
+check('版本号为 1.9.0', () => assert.strictEqual(U.VERSION, '1.9.0'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');

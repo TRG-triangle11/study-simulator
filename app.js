@@ -37,13 +37,13 @@
     { id: 'field_night',       name: '田野·星夜·自然', unavailable: true }
   ];
 
-  /* ===== 字体方案 ===== */
+  /* ===== 字体方案（v1.9.0：weights 为该字体提供的真实字重；variable 为可变字体） ===== */
   const FONTS = [
-    { id: 'modern',     name: '现代无衬线 (HarmonyOS)',    css: '"HarmonyOS Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif', sample: '12:34:56' },
-    { id: 'dseg7',      name: '数码管 (DSEG7 Classic)',    css: '"DSEG7 Classic", "Consolas", monospace', sample: '12:34:56', segment: true },
-    { id: 'spacemono',  name: '几何等宽 (Space Mono)',      css: '"Space Mono", "Consolas", monospace', sample: '12:34:56' },
-    { id: 'plexmono',   name: '工业等宽 (IBM Plex Mono)',   css: '"IBM Plex Mono", "Consolas", monospace', sample: '12:34:56' },
-    { id: 'outfit',     name: '圆润数字 (Outfit)',          css: '"Outfit", "Segoe UI", sans-serif', sample: '12:34:56' }
+    { id: 'modern',     name: '现代无衬线 (HarmonyOS)',    css: '"HarmonyOS Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif', sample: '12:34:56', weights: [100, 300, 400, 500, 700, 900] },
+    { id: 'dseg7',      name: '数码管 (DSEG7 Classic)',    css: '"DSEG7 Classic", "Consolas", monospace', sample: '12:34:56', segment: true, weights: [400, 700] },
+    { id: 'spacemono',  name: '几何等宽 (Space Mono)',      css: '"Space Mono", "Consolas", monospace', sample: '12:34:56', weights: [700] },
+    { id: 'plexmono',   name: '工业等宽 (IBM Plex Mono)',   css: '"IBM Plex Mono", "Consolas", monospace', sample: '12:34:56', weights: [700] },
+    { id: 'outfit',     name: '圆润数字 (Outfit)',          css: '"Outfit", "Segoe UI", sans-serif', sample: '12:34:56', variable: true }
   ];
 
   /* ===== 励志/专注寄语 ===== */
@@ -210,7 +210,7 @@
     soundEnabled: true, pomoWorkMin: 25, pomoBreakMin: 5,
     targetTitle: '距离 目标 还有', targetDate: getDefaultTargetDate(),
     particleEffect: 'rain', rainSpeed: 2, rainDensity: 2, screenFx: false,
-    pomoTimeStyle: 'adaptive', swTimeStyle: 'adaptive'
+    pomoTimeStyle: 'adaptive', swTimeStyle: 'adaptive', clockWeight: 700
   }, loadSettings());
 
   // 兼容迁移历史版本废弃的壁纸 id
@@ -601,11 +601,46 @@
     const ghostSec = ghost.querySelector('.sec-wrap');
     if (ghostSec) ghostSec.style.display = elSecWrap.style.display;
   }
+  /* ===== v1.9.0：时间字体粗细（连续滑块 + 真实字重就近匹配） =====
+   * 关键点：只把数值写进 CSS 变量，由 CSS 统一驱动亮段/暗段/秒数/冒号，
+   * 并禁用合成加粗；固定字重字体不会被浏览器「伪加粗」糊掉。 */
+  const WEIGHT_LABELS = { 100: '极细', 200: '特细', 300: '细', 400: '常规', 500: '中等', 600: '半粗', 700: '粗', 800: '特粗', 900: '极粗' };
+  function clockWeightValue() {
+    return U.clamp(parseInt(state.settings.clockWeight, 10) || 700, 100, 900, 700);
+  }
+  function effectiveWeight(fn, w) {
+    if (fn.variable) return w;                       // 可变字体：真无级
+    const arr = fn.weights || [400, 700];
+    return arr.reduce((best, x) => (Math.abs(x - w) < Math.abs(best - w) ? x : best), arr[0]);
+  }
+  function syncClockWeightUI() {
+    const fn = FONTS.find((x) => x.id === state.settings.font) || FONTS[0];
+    const w = clockWeightValue(), eff = effectiveWeight(fn, w);
+    const range = $('#clockWeightRange'), out = $('#clockWeightOut'),
+          val = $('#clockWeightVal'), hint = $('#clockWeightHint');
+    if (range) range.value = w;
+    if (out) out.textContent = w;
+    if (val) val.textContent = w + ' · ' + (WEIGHT_LABELS[w] || '自定义');
+    if (hint) {
+      hint.textContent = fn.variable
+        ? '当前字体为可变字体，粗细可连续无级调节（100–900）'
+        : `当前字体提供 ${fn.weights.length} 档真实字重（${fn.weights.join(' / ')}），实际生效 ${eff}；不做伪造加粗`;
+    }
+  }
   function applyFont() {
     const fn = FONTS.find((x) => x.id === state.settings.font) || FONTS[0];
     elTime.style.fontFamily = fn.css;
+    /* 统一挂在根元素：#time、翻页暗段、秒数预览一并继承，天然同步不错位 */
+    const rootEl = document.documentElement;
+    if (rootEl.style && typeof rootEl.style.setProperty === 'function') {
+      rootEl.style.setProperty('--clock-weight', String(clockWeightValue()));
+    } else {
+      rootEl.setAttribute('style', '--clock-weight: ' + clockWeightValue()); // 极简 DOM 兜底
+    }
     if (feCurName) feCurName.textContent = fn.name;
+    syncClockWeightUI();
     applySecStyle();
+    applyClockSize(); // 字重改变会改变数字宽度，重新按可用宽度回缩
   }
   function buildFonts() {
     const fn = FONTS.find((x) => x.id === state.settings.font) || FONTS[0];
@@ -688,6 +723,14 @@
     range.addEventListener('change', () => {
       state.settings.size = parseInt(range.value, 10);
       saveSettings(); applyClockSize();
+    });
+
+    /* v1.9.0：字重滑块——拖动即时生效（统一刷新入口 applyFont），不伪造加粗 */
+    const wr = $('#clockWeightRange');
+    if (wr) wr.addEventListener('input', () => {
+      state.settings.clockWeight = parseInt(wr.value, 10) || 700;
+      saveSettings();
+      applyFont();
     });
   }
 

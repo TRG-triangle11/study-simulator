@@ -24,26 +24,31 @@ const MEDIA_CACHE = 'study-sim-media';
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.8.0',
-  './util.js?v=1.8.0',
-  './db.js?v=1.8.0',
-  './sound.js?v=1.8.0',
-  './ambient.js?v=1.8.0',
-  './particles.js?v=1.8.0',
-  './window-rain.js?v=1.8.0',
-  './app.js?v=1.8.0',
+  './style.css?v=1.9.0',
+  './util.js?v=1.9.0',
+  './db.js?v=1.9.0',
+  './sound.js?v=1.9.0',
+  './ambient.js?v=1.9.0',
+  './particles.js?v=1.9.0',
+  './window-rain.js?v=1.9.0',
+  './app.js?v=1.9.0',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
   './assets/icons/app-icon-maskable-512.png',
   './assets/icons/apple-touch-icon-180.png',
-  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.8.0',
-  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.8.0',
+  /* v1.9.0：HarmonyOS 6 档真实字重 + Outfit 可变字体（按需加载，未用到的字重不会预下载） */
+  './assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.0',
+  './assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.0',
+  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.0',
+  './assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.0',
+  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.0',
+  './assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.0',
   './assets/fonts/dseg7-classic-700.woff2',
   './assets/fonts/dseg7-classic-400-normal.woff2',
   './assets/fonts/space-mono-700.woff2',
   './assets/fonts/ibm-plex-mono-700.woff2',
-  './assets/fonts/outfit-700.woff2'
+  './assets/fonts/outfit-variable.woff2?v=1.9.0'
 ];
 
 self.addEventListener('install', (event) => {
