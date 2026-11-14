@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.9.3', () => assert.strictEqual(U.VERSION, '1.9.3'));
+check('版本号为 1.9.4', () => assert.strictEqual(U.VERSION, '1.9.4'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -415,6 +415,23 @@ check('v1.9.3：iPad 字体回退修复 + 触摸端滑块松手恢复', () => {
   assert.ok(app.includes("['change', 'pointerup', 'touchend', 'pointercancel', 'blur']"), '滑块缺少多事件恢复');
   assert.ok(app.includes('undimTimer = setTimeout(undim, 700)'), '缺少防抖自动恢复');
   assert.ok(app.includes("document.addEventListener('touchend', undim)"), '缺少手指滑出后的兜底');
+});
+
+check('v1.9.4：字体跨版本持久缓存 + 预载 + 名句上移', () => {
+  const sw = read('sw.js');
+  const html = read('index.html');
+  const css = read('style.css');
+  // 持久字体缓存：安装跳过已缓存、激活不清、运行时字体也进该缓存
+  assert.ok(sw.includes("FONT_CACHE = 'study-sim-fonts'"), '缺少持久字体缓存');
+  assert.ok(sw.includes('k === FONT_CACHE'), 'activate 会误删字体缓存');
+  assert.ok(sw.includes('if (await fcache.match(url)) return'), '版本更新仍会重复下载字体');
+  assert.ok(sw.includes("req.destination === 'font' ? FONT_CACHE"), '运行时字体未进持久缓存');
+  // 字体地址固定，不再每次版本更新都变
+  assert.ok(css.includes('?v=fonts1') && sw.includes('?v=fonts1'), '字体 URL 未固定');
+  assert.ok(html.includes('rel="preload" as="font"'), '缺少字体预载');
+  // 名句上移且 hint 同步上移
+  assert.ok(css.includes('margin: 24px 0 0'), '名句未上移');
+  assert.ok(css.includes('bottom: -22px'), '悬停提示未同步上移');
 });
 
 check('CSS 引用的字体文件均存在', () => {

@@ -1,5 +1,5 @@
 /**
- * sw.js — 自习模拟器 Service Worker (v1.9.3)
+ * sw.js — 自习模拟器 Service Worker (v1.9.4)
  *
  * 目标：装到手机主屏后离线也能打开、断网不白屏。
  * 策略：
@@ -15,47 +15,59 @@
  */
 'use strict';
 
-const VERSION = '1.9.3';
+const VERSION = '1.9.4';
 const CACHE = 'study-sim-' + VERSION;
 /* v1.7.3：壁纸等图片放独立媒体缓存，跨版本持久——
    版本更新只重建外壳缓存，不再把几十 MB 的壁纸一起清掉重新下载 */
 const MEDIA_CACHE = 'study-sim-media';
+/* v1.9.4：字体放进跨版本持久缓存。字体内容几乎不变，但此前每次版本更新
+   都会被 install 的 cache:'reload' 强制重新下载近 1MB，iPad 上表现为
+   「先显示系统字体、很久才换成鸿蒙字体」。 */
+const FONT_CACHE = 'study-sim-fonts';
 
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.9.3',
-  './util.js?v=1.9.3',
-  './db.js?v=1.9.3',
-  './sound.js?v=1.9.3',
-  './ambient.js?v=1.9.3',
-  './particles.js?v=1.9.3',
-  './window-rain.js?v=1.9.3',
-  './app.js?v=1.9.3',
+  './style.css?v=1.9.4',
+  './util.js?v=1.9.4',
+  './db.js?v=1.9.4',
+  './sound.js?v=1.9.4',
+  './ambient.js?v=1.9.4',
+  './particles.js?v=1.9.4',
+  './window-rain.js?v=1.9.4',
+  './app.js?v=1.9.4',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',
   './assets/icons/app-icon-maskable-512.png',
   './assets/icons/apple-touch-icon-180.png',
   /* v1.9.0：HarmonyOS 6 档真实字重 + Outfit 可变字体（按需加载，未用到的字重不会预下载） */
-  './assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.3',
-  './assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.3',
-  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.3',
-  './assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.3',
-  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.3',
-  './assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.3',
+  './assets/fonts/harmonyos-sans-sc-thin.woff2?v=fonts1',
+  './assets/fonts/harmonyos-sans-sc-light.woff2?v=fonts1',
+  './assets/fonts/harmonyos-sans-sc-regular.woff2?v=fonts1',
+  './assets/fonts/harmonyos-sans-sc-medium.woff2?v=fonts1',
+  './assets/fonts/harmonyos-sans-sc-bold.woff2?v=fonts1',
+  './assets/fonts/harmonyos-sans-sc-black.woff2?v=fonts1',
   './assets/fonts/dseg7-classic-700.woff2',
   './assets/fonts/dseg7-classic-400-normal.woff2',
   './assets/fonts/space-mono-700.woff2',
   './assets/fonts/ibm-plex-mono-700.woff2',
-  './assets/fonts/outfit-variable.woff2?v=1.9.3'
+  './assets/fonts/outfit-variable.woff2?v=fonts1'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     // 单个资源失败不阻断安装，避免某个文件缺失导致整个离线能力失效
-    await Promise.all(SHELL.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => null)));
+    const isFont = (url) => url.indexOf('./assets/fonts/') === 0;
+    await Promise.all(SHELL.filter((url) => !isFont(url))
+      .map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => null)));
+    /* 字体单独放持久缓存，且已缓存就跳过 —— 版本更新不再重复下载 */
+    const fcache = await caches.open(FONT_CACHE);
+    await Promise.all(SHELL.filter(isFont).map(async (url) => {
+      if (await fcache.match(url)) return;
+      await fcache.add(new Request(url, { cache: 'reload' })).catch(() => null);
+    }));
     await self.skipWaiting();
   })());
 });
@@ -63,7 +75,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k === CACHE || k === MEDIA_CACHE ? null : caches.delete(k))));
+    await Promise.all(keys.map((k) => (k === CACHE || k === MEDIA_CACHE || k === FONT_CACHE ? null : caches.delete(k))));
     await self.clients.claim();
   })());
 });
@@ -98,8 +110,9 @@ self.addEventListener('fetch', (event) => {
     try {
       const res = await fetch(req);
       if (res && res.ok) {
-        // 图片（壁纸等大文件）进跨版本持久的媒体缓存，其余进版本缓存
-        const name = req.destination === 'image' ? MEDIA_CACHE : CACHE;
+        // 图片进媒体缓存、字体进持久字体缓存，其余进版本缓存
+        const name = req.destination === 'image' ? MEDIA_CACHE
+                   : req.destination === 'font' ? FONT_CACHE : CACHE;
         if (['image', 'font', 'style', 'script'].indexOf(req.destination) >= 0) {
           const cache = await caches.open(name);
           cache.put(req, res.clone());
