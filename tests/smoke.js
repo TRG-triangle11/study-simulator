@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.9.1', () => assert.strictEqual(U.VERSION, '1.9.1'));
+check('版本号为 1.9.2', () => assert.strictEqual(U.VERSION, '1.9.2'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -378,6 +378,16 @@ check('v1.9.1：字体顺序 / 字重档位滑块 / 单档字体隐藏', () => {
   assert.ok(html.includes('id="clockWeightGroup"'), '缺少可隐藏的设置组容器');
   assert.ok(app.includes("group.style.display = 'none'"), '单档字体未隐藏字重组');
   assert.ok(app.includes("if (g.style.display === 'none') return"), '隐藏设置项仍会被搜索命中');
+});
+
+check('v1.9.2：名句脱离文档流，开关不影响时钟位置', () => {
+  const css = read('style.css');
+  const block = (css.match(/#mottoWrap \{([\s\S]*?)\}/) || [])[1] || '';
+  assert.ok(/position:\s*absolute/.test(block), '名句未脱离文档流');
+  assert.ok(/top:\s*100%/.test(block), '名句未锚定在时钟下方');
+  assert.ok(/translateX\(-50%\)/.test(block), '名句水平居中失效');
+  assert.ok(!/#mottoWrap \{ margin-left: auto/.test(css), '旧的 auto margin 居中规则残留');
+  assert.ok(/#mottoWrap \{ display: none !important/.test(css), '横屏矮屏名句仍会溢出屏幕');
 });
 
 check('CSS 引用的字体文件均存在', () => {

@@ -4,12 +4,12 @@
  * HarmonyOS Sans SC 官方只分发静态字重（许可禁止修改/衍生），
  * 这里把 6 个官方字重各自裁剪到项目字符集，由浏览器按 weight 就近选用；
  * Outfit 是 SIL OFL 可变字体，自托管 wght 100-900 真无级。 */
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 100; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.1') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 300; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.1') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.1') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 500; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.1') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.1') format('woff2'); }
-@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 900; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.1') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 100; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-thin.woff2?v=1.9.2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 300; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-light.woff2?v=1.9.2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-regular.woff2?v=1.9.2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 500; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-medium.woff2?v=1.9.2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-bold.woff2?v=1.9.2') format('woff2'); }
+@font-face { font-family: 'HarmonyOS Sans SC'; font-style: normal; font-weight: 900; font-display: swap; src: url('assets/fonts/harmonyos-sans-sc-black.woff2?v=1.9.2') format('woff2'); }
 
 /* 以下字体为固定字重：400/700 声明各自文件，避免浏览器合成粗体造成字形失真 */
 @font-face { font-family: 'DSEG7 Classic'; font-style: normal; font-weight: 400; font-display: block; src: url('assets/fonts/dseg7-classic-400-normal.woff2') format('woff2'); }
@@ -19,7 +19,7 @@
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 700; font-display: swap; src: url('assets/fonts/ibm-plex-mono-700.woff2') format('woff2'); }
 /* Outfit 可变字体：wght 轴 100-900，字体粗细可连续变化 */
-@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('assets/fonts/outfit-variable.woff2?v=1.9.1') format('woff2'); }
+@font-face { font-family: 'Outfit'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('assets/fonts/outfit-variable.woff2?v=1.9.2') format('woff2'); }
 
 /* ===== CSS 变量 ===== */
 :root {
@@ -893,8 +893,14 @@ input[type=range]::-moz-range-thumb {
 
 /* ===== 每日寄语 / Quotes (点击直接切换下一句) ===== */
 #mottoWrap {
-  margin-top: 24px; display: flex; align-items: center; justify-content: center;
-  max-width: 680px; text-align: center; cursor: pointer; pointer-events: auto;
+  /* v1.9.2：脱离文档流，名句显示/隐藏不再改变 #clock 的高度，
+     垂直居中的时钟位置保持恒定，名句固定出现在时钟下方 */
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  width: max-content; max-width: min(680px, 86vw);
+  margin: 36px 0 0; /* 让开 #clock .hint（底边 +34px），避免悬停提示与名句重叠 */
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; cursor: pointer; pointer-events: auto;
   opacity: 0.75; transition: opacity .25s ease;
   user-select: none;
 }
@@ -1319,8 +1325,8 @@ input, textarea {
 
 /* ===== v1.4.0 ===== */
 
-/* 名句水平居中（此前只设了 max-width，父容器较宽时贴左） */
-#mottoWrap { margin-left: auto; margin-right: auto; }
+/* 名句水平居中：v1.9.2 起由 absolute + left:50% + translateX(-50%) 实现，
+   不再需要 auto margin（绝对定位下 auto margin 反而会把元素推偏） */
 
 /* 设置分组折叠：次级标题前的小三角 */
 .sLabel.sLabelToggle { cursor: pointer; user-select: none; }
@@ -1596,7 +1602,8 @@ html.standalone #bg { top: 0; height: 100vh; height: 100lvh; }
   #clock { padding: 8px 16px; }
   #date { margin-bottom: 8px; }
   #countdownLine { margin-bottom: 10px; }
-  #mottoWrap { display: none; }
+  /* v1.9.2：JS 会给名句写内联 display:flex，需用 !important 才能保证矮屏真正隐藏 */
+  #mottoWrap { display: none !important; }
   #settingsBox { max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 12px); }
 }
 
