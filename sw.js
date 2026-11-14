@@ -1,5 +1,5 @@
 /**
- * sw.js — 自习模拟器 Service Worker (v1.9.4)
+ * sw.js — 自习模拟器 Service Worker (v1.9.5)
  *
  * 目标：装到手机主屏后离线也能打开、断网不白屏。
  * 策略：
@@ -15,7 +15,7 @@
  */
 'use strict';
 
-const VERSION = '1.9.4';
+const VERSION = '1.9.5';
 const CACHE = 'study-sim-' + VERSION;
 /* v1.7.3：壁纸等图片放独立媒体缓存，跨版本持久——
    版本更新只重建外壳缓存，不再把几十 MB 的壁纸一起清掉重新下载 */
@@ -28,14 +28,14 @@ const FONT_CACHE = 'study-sim-fonts';
 const SHELL = [
   './',
   './index.html',
-  './style.css?v=1.9.4',
-  './util.js?v=1.9.4',
-  './db.js?v=1.9.4',
-  './sound.js?v=1.9.4',
-  './ambient.js?v=1.9.4',
-  './particles.js?v=1.9.4',
-  './window-rain.js?v=1.9.4',
-  './app.js?v=1.9.4',
+  './style.css?v=1.9.5',
+  './util.js?v=1.9.5',
+  './db.js?v=1.9.5',
+  './sound.js?v=1.9.5',
+  './ambient.js?v=1.9.5',
+  './particles.js?v=1.9.5',
+  './window-rain.js?v=1.9.5',
+  './app.js?v=1.9.5',
   './manifest.webmanifest',
   './assets/icons/app-icon-192.png',
   './assets/icons/app-icon-512.png',

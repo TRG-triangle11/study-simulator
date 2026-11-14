@@ -1056,7 +1056,11 @@
   }
   function applyMottoSetting() {
     if (!mottoWrap) return;
-    mottoWrap.style.display = state.settings.showMotto ? 'flex' : 'none';
+    const on = !!state.settings.showMotto;
+    mottoWrap.style.display = on ? 'flex' : 'none';
+    // v1.9.5：名句关闭时，悬停提示回到时钟正下方（1.6/1.7 的位置）
+    const clockEl = $('#clock');
+    if (clockEl) clockEl.classList.toggle('motto-off', !on);
     if (mottoText && !mottoText.textContent) mottoText.textContent = `“${MOTTO_LIST[0]}”`;
   }
 

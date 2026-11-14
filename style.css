@@ -196,11 +196,14 @@ html.font-variable .secPreview {
 #time.sec-eq .sec-wrap { font-size: 1em; opacity: 1; align-self: center; margin: 0 .0504em; gap: .0504em; padding-bottom: 0 }
 #time.sec-eq .sec-wrap .sep { font-size: .42em; font-weight: 400; opacity: .72 }
 #clock .hint {
-  position: absolute; left: 50%; transform: translateX(-50%); bottom: -22px;
+  /* v1.9.5：提示回到名句下方（1.6/1.7 的上下顺序），不再贴着时钟把名句挤下去 */
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: -60px;
   font-size: 13px; letter-spacing: .14em; color: var(--white-50);
   opacity: 0; transition: opacity .3s ease; white-space: nowrap;
 }
 #clock:hover .hint { opacity: 1 }
+/* 名句关闭时，提示回到时钟正下方的历史位置 */
+#clock.motto-off .hint { bottom: -34px }
 
 /* 翻页时钟小方框（可选） */
 #time.flip #tH, #time.flip #tM, #time.flip #tS {
@@ -905,7 +908,9 @@ input[type=range]::-moz-range-thumb {
   position: absolute; top: 100%; left: 50%;
   transform: translateX(-50%);
   width: max-content; max-width: min(680px, 86vw);
-  margin: 24px 0 0; /* v1.9.4：名句整体上移 12px；hint 同步上移，仍保持 2px 间隔不重叠 */
+  margin: 0; /* v1.9.5：恢复 1.6/1.7 的相对位置。#clock 自带 24px 内边距，
+                 正好等于当年名句的 margin-top:24px，所以这里归零即「紧贴时钟」；
+                 悬停提示改到名句下方，名句不再被推到提示下面 */
   display: flex; align-items: center; justify-content: center;
   text-align: center; cursor: pointer; pointer-events: auto;
   opacity: 0.75; transition: opacity .25s ease;

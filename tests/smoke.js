@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.9.4', () => assert.strictEqual(U.VERSION, '1.9.4'));
+check('版本号为 1.9.5', () => assert.strictEqual(U.VERSION, '1.9.5'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -417,7 +417,7 @@ check('v1.9.3：iPad 字体回退修复 + 触摸端滑块松手恢复', () => {
   assert.ok(app.includes("document.addEventListener('touchend', undim)"), '缺少手指滑出后的兜底');
 });
 
-check('v1.9.4：字体跨版本持久缓存 + 预载 + 名句上移', () => {
+check('v1.9.4：字体跨版本持久缓存 + 预载', () => {
   const sw = read('sw.js');
   const html = read('index.html');
   const css = read('style.css');
@@ -429,9 +429,23 @@ check('v1.9.4：字体跨版本持久缓存 + 预载 + 名句上移', () => {
   // 字体地址固定，不再每次版本更新都变
   assert.ok(css.includes('?v=fonts1') && sw.includes('?v=fonts1'), '字体 URL 未固定');
   assert.ok(html.includes('rel="preload" as="font"'), '缺少字体预载');
-  // 名句上移且 hint 同步上移
-  assert.ok(css.includes('margin: 24px 0 0'), '名句未上移');
-  assert.ok(css.includes('bottom: -22px'), '悬停提示未同步上移');
+});
+
+check('v1.9.5：名句与悬停提示恢复 1.6/1.7 的上下顺序与间距', () => {
+  const css = read('style.css');
+  const app = read('app.js');
+  const motto = (css.match(/#mottoWrap \{([\s\S]*?)\}/) || [])[1] || '';
+  const hint = (css.match(/#clock \.hint \{([\s\S]*?)\}/) || [])[1] || '';
+  // 名句脱离文档流仍是前提，否则开关名句会把时钟顶走
+  assert.ok(/position:\s*absolute/.test(motto) && /top:\s*100%/.test(motto), '名句不再锚定时钟下方');
+  // #clock 自带 24px 内边距 == 1.6/1.7 的 margin-top:24px，故归零即回到历史位置
+  assert.ok(/margin:\s*0;/.test(motto), '名句没有回到紧贴时钟的历史位置');
+  // 提示移到名句下方，不再是 -22px（贴在时钟上、把名句挤下去）
+  assert.ok(/bottom:\s*-60px/.test(hint), '悬停提示未移到名句下方');
+  assert.ok(!/bottom:\s*-22px/.test(hint), '仍残留 v1.9.4 的贴时钟提示位置');
+  // 名句关闭时提示复位，且 JS 真的打了标记
+  assert.ok(css.includes('#clock.motto-off .hint { bottom: -34px }'), '名句关闭时提示位置未复位');
+  assert.ok(app.includes("classList.toggle('motto-off', !on)"), 'JS 未同步名句开关状态');
 });
 
 check('CSS 引用的字体文件均存在', () => {
