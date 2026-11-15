@@ -25,7 +25,7 @@ function check(name, fn) {
 
 console.log('\n[1] util.js 纯函数');
 const U = require(path.join(ROOT, 'util.js'));
-check('版本号为 1.9.5', () => assert.strictEqual(U.VERSION, '1.9.5'));
+check('版本号为 1.10.0', () => assert.strictEqual(U.VERSION, '1.10.0'));
 check('本地日期在 UTC+8 凌晨不跨日', () => {
   assert.strictEqual(U.localDateKey(new Date(2026, 10, 13, 0, 30)), '2026-11-13');
   assert.strictEqual(U.localDateKey(new Date(2026, 0, 1, 7, 59)), '2026-01-01');
@@ -448,6 +448,32 @@ check('v1.9.5：名句与悬停提示恢复 1.6/1.7 的上下顺序与间距', (
   assert.ok(app.includes("classList.toggle('motto-off', !on)"), 'JS 未同步名句开关状态');
 });
 
+check('v1.10.0：壁纸裁剪 / 顺序 / 占位清零 / 界面居中', () => {
+  const html = read('index.html');
+  const css = read('style.css');
+  const app = read('app.js');
+  // 裁剪浮窗、两个比例与框选大小
+  assert.ok(html.includes('id="cropModal"') && html.includes('id="cropFrame"'), '缺少裁剪浮窗');
+  assert.ok(html.includes('data-ratio="16:9"') && html.includes('data-ratio="4:3"'), '缺少 16:9 / 4:3 两个比例选项');
+  assert.ok(html.includes('id="cropZoom"') && html.includes('id="cropImg"'), '裁剪预览或框选大小调节缺失');
+  // 比例自动识别、上传走裁剪、输出与触摸拖动
+  assert.ok(app.includes("const CROP_RATIOS = { '16:9': 16 / 9, '4:3': 4 / 3 }"), '比例常量缺失');
+  assert.ok(app.includes('function detectCropRatio()'), '缺少屏幕比例自动识别');
+  assert.ok(app.includes('openCropper(f)'), '上传未接入裁剪浮窗');
+  assert.ok(app.includes('function cropOutput()'), '缺少裁剪输出');
+  assert.ok(app.includes('setPointerCapture(ev.pointerId)'), '裁剪框不支持触摸拖动');
+  assert.ok(app.includes("if (cropModalEl && cropModalEl.classList.contains('show'))"), 'Esc 未优先关闭裁剪浮窗');
+  // 自定义壁纸永远在最后，网页里不再有任何占位
+  assert.ok(app.includes('DEFAULT_BGS.concat(customCards)'), '自定义壁纸没有排在最后');
+  assert.ok(!app.includes("note.textContent = '待重制'"), '网页仍会生成待重制占位卡片');
+  assert.ok((app.match(/unavailable: true/g) || []).length === 0, '占位条目未彻底清除');
+  // 界面重心：以大时钟为基准上移，且安全区规则不会覆盖掉
+  assert.ok(css.includes('--clock-lift: 21px'), '缺少可微调的居中修正量');
+  assert.ok(css.includes('calc(var(--safe-bottom) + var(--clock-lift, 21px) * 2)'), '安全区规则会覆盖居中修正');
+  // 版本已同步
+  assert.strictEqual(U.VERSION, '1.10.0', '版本号未同步');
+});
+
 check('CSS 引用的字体文件均存在', () => {
   const css = read('style.css');
   const urls = Array.from(css.matchAll(/url\('(assets\/[^']+)'\)/g), (m) => m[1].split('?')[0]);
@@ -482,13 +508,25 @@ check('字体方案已更新且倒计时开关存在', () => {
 check('DEFAULT_BGS 引用的壁纸均存在', () => {
   const app = read('app.js');
   const urls = Array.from(app.matchAll(/url: '(assets\/[^']+)'/g), (m) => m[1]);
-  // v1.8.0：在用壁纸 5 张图 + 纯黑（无文件）；下架条目无 url 不会进此列表
-  assert.ok(urls.length === 5, '在用壁纸应为 5 张，实际 ' + urls.length);
+  // v1.10.0：7 张在用壁纸 + 纯黑（无文件）；网页里已无占位条目
+  assert.ok(urls.length === 7, '在用壁纸应为 7 张，实际 ' + urls.length);
   urls.forEach((p) => assert.ok(fs.existsSync(path.join(ROOT, p)), '缺少 ' + p));
-  // 下架壁纸保留名字占位
-  const names = ['默认·纯黑', '高楼夜景', '沿江高楼', '高楼黄昏', '高楼俯瞰', '高楼俯瞰·夜空'];
+  const names = ['默认·纯黑', '高楼夜景', '沿江高楼', '高楼黄昏', '高楼俯瞰', '高楼俯瞰·夜空',
+                 '书桌·黄昏·写实', '窗前·碧绿田野'];
   names.forEach((n) => assert.ok(app.includes("'" + n + "'"), '缺少改名后的壁纸 ' + n));
-  assert.ok((app.match(/unavailable: true/g) || []).length === 10, '下架壁纸应为 10 张');
+  assert.ok(!/unavailable:\s*true/.test(app), '仍残留占位条目');
+});
+check('v1.10.0：两张定稿壁纸接入且网页无占位', () => {
+  const app = read('app.js');
+  const css = read('style.css');
+  ['assets/desk_sunset_real.jpg', 'assets/desk_field_day.jpg'].forEach((p) => {
+    assert.ok(fs.existsSync(path.join(ROOT, p)), '缺少定稿壁纸 ' + p);
+    const buf = fs.readFileSync(path.join(ROOT, p));
+    assert.strictEqual(buf.slice(0, 2).toString('hex'), 'ffd8', p + ' 不是有效 jpg');
+  });
+  assert.ok(app.includes("id: 'desk_sunset_real'") && app.includes("id: 'desk_field_day'"), '两张定稿壁纸未接入列表');
+  assert.ok(!/\.bgCard\.off/.test(css), '占位卡片样式未清理');
+  assert.ok(fs.existsSync(path.join(ROOT, '待做壁纸清单.md')), '待做清单文件缺失');
 });
 check('1.2 历史版本快照完整', () => {
   ['README.md', 'app.js', 'db.js', 'index.html', 'style.css', 'ambient.js', 'particles.js', 'sound.js']

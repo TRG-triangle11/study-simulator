@@ -149,6 +149,12 @@ html.standalone #fsRoundBtn { display: none !important; }
 #clockWrap {
   position: fixed; inset: 0; z-index: 2;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
+  /* 容器整体居中时，日期压在时钟上方、名句与提示挂在时钟下方，
+     大时钟数字的视觉中心会比屏幕中线低约 21px，看起来「整体偏下」。
+     底部留出 2 倍内边距，flex 居中会把整组内容上移 1 倍（21px），
+     让时钟正好落在中线。想再微调上下，只改 :root 的 --clock-lift 即可。 */
+  padding-bottom: calc(var(--clock-lift, 21px) * 2);
+  box-sizing: border-box;
   pointer-events: none;
 }
 #clock {
@@ -433,6 +439,71 @@ html.font-variable .secPreview {
 #bgDetailBox .bgGrid { margin-bottom: 12px }
 #bgDetailBox .fdBtns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px }
 
+/* ===== 自定义壁纸裁剪浮窗（比例锁定 16:9 / 4:3） ===== */
+#cropModal {
+  display: none; position: fixed; inset: 0; z-index: 14;
+  align-items: center; justify-content: center; background: rgba(0,0,0,.62);
+}
+#cropModal.show { display: flex }
+#cropBox {
+  width: min(760px, 92vw); max-height: 90vh; overflow-y: auto;
+  background: var(--panel-bg-deep); backdrop-filter: var(--panel-blur);
+  border: 1px solid var(--panel-border); border-radius: var(--panel-radius);
+  padding: 24px 26px; box-shadow: var(--panel-shadow); scrollbar-width: none;
+}
+#cropBox::-webkit-scrollbar { width: 0; height: 0; display: none }
+#cropBox .fdLabel { font-size: 13px; letter-spacing: .08em; color: var(--white-60); margin-bottom: 8px }
+.cropTip { font-size: 12px; color: var(--white-62); margin-bottom: 12px }
+.cropRatios { display: flex; gap: 10px; margin-bottom: 14px }
+.cropRatioBtn {
+  padding: 8px 20px; border-radius: 10px; border: 1px solid var(--white-18);
+  background: var(--white-05); color: var(--white-80); font-size: 14px;
+  cursor: pointer; transition: all .2s; font-family: inherit;
+}
+.cropRatioBtn:hover { background: var(--white-12) }
+.cropRatioBtn.active {
+  border-color: var(--color-accent); background: var(--color-accent-bg);
+  color: #fff; box-shadow: 0 0 0 1px var(--color-accent-glow);
+}
+.cropStage {
+  position: relative; margin: 0 auto; overflow: hidden;
+  background: #0a0c10; border-radius: 12px; border: 1px solid var(--white-10);
+  touch-action: none;
+}
+#cropImg {
+  display: block; width: 100%; height: 100%;
+  user-select: none; -webkit-user-drag: none; pointer-events: none;
+}
+.cropFrame {
+  position: absolute; box-sizing: border-box; border: 2px solid #fff;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.55), 0 2px 10px rgba(0,0,0,.4);
+  cursor: move; touch-action: none;
+}
+.cropLine { position: absolute; background: rgba(255,255,255,.35); pointer-events: none }
+.cropLine.v1, .cropLine.v2 { top: 0; bottom: 0; width: 1px }
+.cropLine.v1 { left: 33.333% }
+.cropLine.v2 { left: 66.666% }
+.cropLine.h1, .cropLine.h2 { left: 0; right: 0; height: 1px }
+.cropLine.h1 { top: 33.333% }
+.cropLine.h2 { top: 66.666% }
+.cropZoomRow {
+  display: flex; align-items: center; gap: 14px;
+  margin: 14px 0 6px; font-size: 13px; color: var(--white-72);
+}
+.cropZoomRow > span:first-child { white-space: nowrap }
+.cropZoomRow > span:last-child { min-width: 46px; text-align: center; font-variant-numeric: tabular-nums }
+/* 矮屏内容超长时按钮仍贴在浮窗底部，不用先滚动才能点「使用这张」 */
+#cropBox .fdBtns {
+  display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;
+  position: sticky; bottom: 0; z-index: 2;
+  padding: 10px 0 2px; background: var(--panel-bg-deep);
+}
+#cropConfirm:disabled { opacity: .5; cursor: default }
+@media (hover: none) {
+  .cropRatioBtn { padding: 10px 22px; font-size: 15px }
+  .cropZoomRow { gap: 10px }
+}
+
 /* 字号滑块 */
 .sizeRow { display: flex; align-items: center; gap: 14px }
 .sizeRow output { font-size: 15px; color: #fff; min-width: 52px; text-align: center; font-variant-numeric: tabular-nums }
@@ -463,15 +534,6 @@ input[type=range]::-moz-range-thumb {
   position: absolute; left: 0; bottom: 0; right: 0;
   padding: 3px 6px; font-size: 10px; background: rgba(0,0,0,.55);
   color: var(--white-85); letter-spacing: .05em;
-}
-/* v1.8.0：暂下架壁纸（保留名字占位，待重制） */
-.bgCard.off { cursor: default; opacity: .38; }
-.bgCard.off:hover { transform: none; }
-.bgCard.off .offNote {
-  position: absolute; top: 6px; right: 6px;
-  font-size: 9px; color: var(--white-40);
-  border: 1px solid var(--white-12); border-radius: 6px;
-  padding: 1px 5px; letter-spacing: .08em;
 }
 .bgCard.upload {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1529,6 +1591,8 @@ input, textarea {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+  /* 界面视觉重心相对屏幕中线上移量（以大时钟为基准），改这一个数即可微调 */
+  --clock-lift: 21px;
 }
 
 /* 刘海与 Home 指示条：靠边元素统一让位，避免被遮住或被系统手势误触 */
@@ -1547,7 +1611,9 @@ input, textarea {
   bottom: calc(70px + var(--safe-bottom));
 }
 #clockWrap {
-  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  padding: var(--safe-top) var(--safe-right)
+           calc(var(--safe-bottom) + var(--clock-lift, 21px) * 2)
+           var(--safe-left);
 }
 
 /* PWA 独立窗口里关掉橡皮筋回弹与点击高亮，接近原生应用手感；

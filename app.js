@@ -24,17 +24,10 @@
     { id: 'desk_window_dusk',  name: '高楼黄昏',       url: 'assets/desk_city_dusk_real.jpg' },
     { id: 'city_sunny',        name: '高楼俯瞰',       url: 'assets/city_sunny_real.jpg' },
     { id: 'city_night',        name: '高楼俯瞰·夜空',  url: 'assets/city_night_real.jpg' },
-    /* v1.8.0：以下壁纸暂下架（图片待重新制作），保留名字占位，不可选 */
-    { id: 'desk_sunny_real',   name: '书桌·晴天·写实', unavailable: true },
-    { id: 'desk_sunny_anime',  name: '书桌·晴天·动漫', unavailable: true },
-    { id: 'desk_rainy_real',   name: '书桌·雨天·写实', unavailable: true },
-    { id: 'desk_rainy_anime',  name: '书桌·雨天·动漫', unavailable: true },
-    { id: 'desk_sunset_real',  name: '书桌·黄昏·写实', unavailable: true },
-    { id: 'desk_sunset_anime', name: '书桌·黄昏·动漫', unavailable: true },
-    { id: 'desk_field_day',    name: '窗前·碧绿田野',  unavailable: true },
-    { id: 'field_sunny',       name: '田野·晴空·自然', unavailable: true },
-    { id: 'field_sunny_anime', name: '田野·晴空·动漫', unavailable: true },
-    { id: 'field_night',       name: '田野·星夜·自然', unavailable: true }
+    /* v1.10.0：两张定稿壁纸接入。其余还没做的图不再放在网页里占位，
+       单独记在「待做壁纸清单.md」，壁纸选择里只显示真正能用的图 */
+    { id: 'desk_sunset_real',  name: '书桌·黄昏·写实', url: 'assets/desk_sunset_real.jpg' },
+    { id: 'desk_field_day',    name: '窗前·碧绿田野',  url: 'assets/desk_field_day.jpg' }
   ];
 
   /* ===== 字体方案（Outfit 第二位、真可变字体；stops 为固定档位 / 状态词表） ===== */
@@ -352,25 +345,19 @@
     setTimeout(() => { try { sp.remove(); } catch (e) { /* 忽略 */ } }, 600);
   }
 
-  /* v1.8.0：壁纸改版——只保留 6 张在用壁纸；其余暂下架（图片待重新制作），
-     保留名字占位且不可选。unavailable 条目 resolveBg 返回 null */
+    /* v1.8.0：壁纸改版——只保留真正在用的壁纸；
+       待做的图片单独记在「待做壁纸清单.md」，不再放进列表占位 */
   function resolveBg(bgId) {
     const c = state.customBgs || [];
     for (let i = 0; i < c.length; i++) if (c[i].id === bgId) return c[i].url;
     for (let j = 0; j < DEFAULT_BGS.length; j++) {
-      if (DEFAULT_BGS[j].id === bgId) return DEFAULT_BGS[j].unavailable ? null : DEFAULT_BGS[j].url;
+      if (DEFAULT_BGS[j].id === bgId) return DEFAULT_BGS[j].url;
     }
     return 'black';
   }
 
   function applyBg() {
-    let url = resolveBg(state.settings.bg);
-    /* v1.8.0：当前壁纸已下架（图片待重制）则自动回落到默认·纯黑 */
-    if (url === null) {
-      state.settings.bg = 'black';
-      saveSettings();
-      url = 'black';
-    }
+    const url = resolveBg(state.settings.bg);
     elVignette.style.opacity = U.clamp(state.settings.dim, 0.15, 1, 0.62);
     syncWindowRainBackdrop();
     if (url === _appliedBg) return;
@@ -474,7 +461,9 @@
     const customCards = (state.customBgs || []).map((b) => ({
       id: b.id, name: '自定义', url: b.url, custom: true, objectUrl: b.objectUrl
     }));
-    const all = customCards.concat(DEFAULT_BGS);
+    /* 预设壁纸在前，用户自己上传的永远排在最后；
+       网页里不再有任何「待重制」占位卡片 */
+    const all = DEFAULT_BGS.concat(customCards);
 
     // 入口行显示当前壁纸名称
     const curBg = all.find((b) => b.id === state.settings.bg);
@@ -511,18 +500,9 @@
         tag.className = 'tag';
         tag.textContent = b.name;
         div.appendChild(tag);
-        /* v1.8.0：暂下架的壁纸只保留名字占位，不可选 */
-        if (b.unavailable) {
-          div.classList.add('off');
-          const note = document.createElement('span');
-          note.className = 'offNote';
-          note.textContent = '待重制';
-          div.appendChild(note);
-        } else {
-          div.onclick = () => {
-            state.settings.bg = b.id; saveSettings(); buildBgGrid(); applyBg();
-          };
-        }
+        div.onclick = () => {
+          state.settings.bg = b.id; saveSettings(); buildBgGrid(); applyBg();
+        };
       }
       grid.appendChild(div);
     });
@@ -568,15 +548,184 @@
     });
   }
 
-  if (fileInput) {
-    fileInput.addEventListener('change', function (ev) {
-      const f = ev.target.files && ev.target.files[0];
-      ev.target.value = '';
-      if (!f) return;
-      if (!/^image\//.test(f.type)) { alert('请选择有效的图片文件'); return; }
-      if (f.size > MAX_UPLOAD_BYTES) { alert('图片过大（上限 20 MB），请压缩后再上传'); return; }
+  /* ===== 自定义壁纸裁剪：按屏幕比例锁定 16:9 / 4:3 ===== */
+  const CROP_RATIOS = { '16:9': 16 / 9, '4:3': 4 / 3 };
+  let cropState = null;
+  let cropElsCache = null;
 
-      compressImage(f).then((result) => {
+  function cropEls() {
+    if (!cropElsCache) {
+      cropElsCache = {
+        modal: $('#cropModal'), box: $('#cropBox'), tip: $('#cropTip'),
+        stage: $('#cropStage'), img: $('#cropImg'), frame: $('#cropFrame'),
+        zoom: $('#cropZoom'), zoomVal: $('#cropZoomVal'),
+        ratioBtns: Array.prototype.slice.call(document.querySelectorAll('.cropRatioBtn')),
+        cancel: $('#cropCancel'), confirm: $('#cropConfirm')
+      };
+    }
+    return cropElsCache;
+  }
+
+  /* 屏幕比例更接近哪个就默认选哪个：iPad 4:3、桌面 16:9 */
+  function detectCropRatio() {
+    const r = window.innerWidth / Math.max(1, window.innerHeight);
+    return Math.abs(r - CROP_RATIOS['16:9']) <= Math.abs(r - CROP_RATIOS['4:3']) ? '16:9' : '4:3';
+  }
+
+  function cropLayoutStage(natW, natH) {
+    const e = cropEls();
+    /* 浮窗必须先显示再量尺寸：display:none 时 clientWidth 恒为 0 */
+    const maxW = Math.max(240, Math.min(e.box.clientWidth, 720));
+    const maxH = Math.max(160, Math.min(window.innerHeight * 0.42, 380));
+    const s = Math.min(maxW / natW, maxH / natH);
+    e.stage.style.width = Math.max(80, Math.round(natW * s)) + 'px';
+    e.stage.style.height = Math.max(60, Math.round(natH * s)) + 'px';
+  }
+
+  function cropClamp(st) {
+    st.x = U.clamp(st.x, 0, Math.max(0, st.stageW - st.w), 0);
+    st.y = U.clamp(st.y, 0, Math.max(0, st.stageH - st.h), 0);
+  }
+
+  function cropFit(ratioKey, zoom, keepCenter) {
+    const st = cropState;
+    if (!st) return;
+    const r = CROP_RATIOS[ratioKey];
+    let w = Math.min(st.stageW, st.stageH * r);
+    let h = w / r;
+    if (h > st.stageH) { h = st.stageH; w = h * r; }
+    w *= zoom; h *= zoom;
+    const cx = keepCenter ? st.x + st.w / 2 : st.stageW / 2;
+    const cy = keepCenter ? st.y + st.h / 2 : st.stageH / 2;
+    st.w = w; st.h = h; st.x = cx - w / 2; st.y = cy - h / 2;
+    st.ratio = ratioKey;
+    cropClamp(st);
+  }
+
+  function cropRender() {
+    const st = cropState;
+    if (!st) return;
+    const e = cropEls();
+    e.frame.style.left = st.x + 'px';
+    e.frame.style.top = st.y + 'px';
+    e.frame.style.width = st.w + 'px';
+    e.frame.style.height = st.h + 'px';
+    e.zoomVal.textContent = Math.round(st.zoom * 100) + '%';
+    e.ratioBtns.forEach((b) => b.classList.toggle('active', b.dataset.ratio === st.ratio));
+  }
+
+  function closeCropper() {
+    const e = cropEls();
+    e.modal.classList.remove('show');
+    if (cropState && cropState.srcUrl) URL.revokeObjectURL(cropState.srcUrl);
+    e.img.removeAttribute('src');
+    cropState = null;
+    e.confirm.disabled = false;
+  }
+
+  function openCropper(file) {
+    const e = cropEls();
+    if (cropState) closeCropper();
+    const srcUrl = URL.createObjectURL(file);
+    e.img.onload = () => {
+      const natW = e.img.naturalWidth, natH = e.img.naturalHeight;
+      if (!natW || !natH) {
+        URL.revokeObjectURL(srcUrl);
+        alert('图片解码失败，请换一张重试');
+        return;
+      }
+      /* 先显示浮窗再量尺寸，否则 display:none 下 stage 宽高都是 0 */
+      e.modal.classList.add('show');
+      cropLayoutStage(natW, natH);
+      cropState = {
+        srcUrl: srcUrl, natW: natW, natH: natH,
+        stageW: e.stage.clientWidth, stageH: e.stage.clientHeight,
+        x: 0, y: 0, w: 0, h: 0, zoom: 1, ratio: detectCropRatio()
+      };
+      /* 显示图 → 原图的倍率，裁剪时用它把框坐标换算回真实像素 */
+      cropState.scale = natW / cropState.stageW;
+      cropFit(cropState.ratio, 1, false);
+      e.zoom.value = '100';
+      const auto = cropState.ratio;
+      e.tip.textContent = '已按当前屏幕比例自动选择 ' + auto + ' · 拖动画框选择保留区域，可切换比例或调整大小';
+      cropRender();
+    };
+    e.img.onerror = () => {
+      URL.revokeObjectURL(srcUrl);
+      cropState = null;
+      alert('图片解码失败，请换一张重试');
+    };
+    e.img.src = srcUrl;
+  }
+
+  function cropOutput() {
+    return new Promise((resolve, reject) => {
+      const st = cropState;
+      const img = cropEls().img;
+      const sx = Math.max(0, Math.round(st.x * st.scale));
+      const sy = Math.max(0, Math.round(st.y * st.scale));
+      const sw = Math.max(1, Math.min(Math.round(st.w * st.scale), st.natW - sx));
+      const sh = Math.max(1, Math.min(Math.round(st.h * st.scale), st.natH - sy));
+      const k = Math.min(1, 1920 / Math.max(sw, sh));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(sw * k));
+      c.height = Math.max(1, Math.round(sh * k));
+      c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      c.toBlob((blob) => {
+        if (!blob) return reject(new Error('裁剪输出失败'));
+        resolve({ blob: blob, url: URL.createObjectURL(blob) });
+      }, SUPPORTS_WEBP ? 'image/webp' : 'image/jpeg', 0.85);
+    });
+  }
+
+  (function setupCropper() {
+    const e = cropEls();
+    if (!e.modal) return;
+    e.ratioBtns.forEach((b) => b.addEventListener('click', () => {
+      if (!cropState) return;
+      cropFit(b.dataset.ratio, cropState.zoom, true);
+      e.tip.textContent = '当前 ' + b.dataset.ratio + ' · 拖动画框选择保留区域，可切换比例或调整大小';
+      cropRender();
+    }));
+    e.zoom.addEventListener('input', () => {
+      if (!cropState) return;
+      cropState.zoom = parseInt(e.zoom.value, 10) / 100;
+      cropFit(cropState.ratio, cropState.zoom, true);
+      cropRender();
+    });
+    /* Pointer Events：鼠标与触摸共用一套拖动逻辑 */
+    let drag = null;
+    e.frame.addEventListener('pointerdown', (ev) => {
+      if (!cropState) return;
+      ev.preventDefault();
+      try { e.frame.setPointerCapture(ev.pointerId); } catch (_) { /* 忽略 */ }
+      drag = { id: ev.pointerId, sx: ev.clientX, sy: ev.clientY, ox: cropState.x, oy: cropState.y };
+    });
+    e.frame.addEventListener('pointermove', (ev) => {
+      if (!drag || drag.id !== ev.pointerId || !cropState) return;
+      cropState.x = drag.ox + ev.clientX - drag.sx;
+      cropState.y = drag.oy + ev.clientY - drag.sy;
+      cropClamp(cropState);
+      cropRender();
+    });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => {
+      e.frame.addEventListener(t, () => { drag = null; });
+    });
+    /* 点击框外，把裁剪框中心移到手指 / 鼠标位置 */
+    e.stage.addEventListener('pointerdown', (ev) => {
+      if (!cropState || ev.target === e.frame || e.frame.contains(ev.target)) return;
+      const r = e.stage.getBoundingClientRect();
+      cropState.x = ev.clientX - r.left - cropState.w / 2;
+      cropState.y = ev.clientY - r.top - cropState.h / 2;
+      cropClamp(cropState);
+      cropRender();
+    });
+    e.cancel.addEventListener('click', closeCropper);
+    e.modal.addEventListener('click', (ev) => { if (ev.target === e.modal) closeCropper(); });
+    e.confirm.addEventListener('click', () => {
+      if (!cropState) return;
+      e.confirm.disabled = true;
+      cropOutput().then((result) => {
         const id = 'custom_' + Date.now();
         const item = { id: id, name: '自定义', blob: result.blob, created_at: Date.now() };
         const saving = window.StudyDB ? window.StudyDB.saveBg(item) : Promise.resolve(null);
@@ -585,11 +734,25 @@
           state.customBgs.push(Object.assign({}, item, { url: result.url, objectUrl: result.url }));
           state.settings.bg = id;
           saveSettings(); buildBgGrid(); applyBg(); updateDbHint();
+          closeCropper();
         });
       }).catch((err) => {
         console.warn('自定义壁纸处理失败:', err);
         alert('图片处理失败，请换一张重试');
-      });
+      }).then(() => { e.confirm.disabled = false; });
+    });
+  })();
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function (ev) {
+      const f = ev.target.files && ev.target.files[0];
+      ev.target.value = '';
+      if (!f) return;
+      if (!/^image\//.test(f.type)) { alert('请选择有效的图片文件'); return; }
+      if (f.size > MAX_UPLOAD_BYTES) { alert('图片过大（上限 20 MB），请压缩后再上传'); return; }
+
+      /* 先进入裁剪界面，确认后再压缩保存 */
+      openCropper(f);
     });
   }
 
@@ -1904,6 +2067,12 @@
                      !!(e.target && e.target.isContentEditable);
       // Esc 始终生效（输入框内也能关闭浮层 / 退出禅意）
       if (e.key === 'Escape') {
+        /* 裁剪浮窗是模态：打开时 Esc 只关它，不误触禅意退出或其它浮层 */
+        const cropModalEl = $('#cropModal');
+        if (cropModalEl && cropModalEl.classList.contains('show')) {
+          closeCropper();
+          return;
+        }
         if (state.zenMode) toggleZenMode();
         closeSettings(); closeFontDetail(); closeBgDetail();
         const pop = $('#datePickerPopover');
@@ -1911,6 +2080,9 @@
         return;
       }
       if (typing) return;
+      /* 裁剪浮窗打开时屏蔽主界面快捷键，避免空格 / Z / F 误触 */
+      const cropOpen = $('#cropModal');
+      if (cropOpen && cropOpen.classList.contains('show')) return;
       if (e.code === 'Space') {
         e.preventDefault();
         if (state.settings.mode === 'pomodoro') togglePomodoro();

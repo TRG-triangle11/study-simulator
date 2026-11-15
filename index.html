@@ -41,12 +41,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="自习模拟器">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
-<title>自习模拟器 v1.9.5</title>
+<title>自习模拟器 v1.10.0</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cstyle%3Ecircle%2Cpath%7Bstroke%3A%231a1a1a%7D%40media%20%28prefers-color-scheme%3Adark%29%7Bcircle%2Cpath%7Bstroke%3A%23ffffff%7D%7D%3C%2Fstyle%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2746%27%20fill%3D%27none%27%20stroke-width%3D%277%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L50%2022%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M50%2050%20L66%2056%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
 <!-- v1.9.4：提前发起最常用两档字体请求，避免等 CSS 解析完才开始下载 -->
 <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/fonts/harmonyos-sans-sc-regular.woff2?v=fonts1">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/fonts/harmonyos-sans-sc-bold.woff2?v=fonts1">
-<link rel="stylesheet" href="style.css?v=1.9.5">
+<link rel="stylesheet" href="style.css?v=1.10.0">
 </head>
 <body>
 
@@ -126,7 +126,7 @@
     <div class="sHeader">
       <div class="sTitle">
         <h2>设置</h2>
-        <span class="ver">v1.9.5</span>
+        <span class="ver">v1.10.0</span>
       </div>
       <div class="sSearch">
         <svg class="sSearchIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -578,6 +578,34 @@
   </div>
 </div>
 
+<!-- 自定义壁纸裁剪浮窗：按屏幕比例锁定 16:9 / 4:3 -->
+<div id="cropModal" role="dialog" aria-modal="true" aria-label="裁剪自定义壁纸">
+  <div id="cropBox">
+    <div class="fdLabel">裁剪壁纸</div>
+    <div class="cropTip" id="cropTip">已按当前屏幕比例自动选择</div>
+    <div class="cropRatios" role="group" aria-label="裁剪比例">
+      <button type="button" class="cropRatioBtn" data-ratio="16:9">16:9</button>
+      <button type="button" class="cropRatioBtn" data-ratio="4:3">4:3</button>
+    </div>
+    <div class="cropStage" id="cropStage">
+      <img id="cropImg" alt="待裁剪的壁纸" draggable="false">
+      <div class="cropFrame" id="cropFrame" aria-label="拖动选择保留区域">
+        <span class="cropLine v1"></span><span class="cropLine v2"></span>
+        <span class="cropLine h1"></span><span class="cropLine h2"></span>
+      </div>
+    </div>
+    <div class="cropZoomRow">
+      <span>框选范围</span>
+      <input type="range" id="cropZoom" min="30" max="100" value="100" step="1" aria-label="裁剪框大小">
+      <span id="cropZoomVal">100%</span>
+    </div>
+    <div class="fdBtns">
+      <button class="fdBtn back" id="cropCancel" type="button">取消</button>
+      <button class="fdBtn apply" id="cropConfirm" type="button">使用这张</button>
+    </div>
+  </div>
+</div>
+
 <!-- 氛围白噪音浮动按钮与混音面板 -->
 <button id="ambientBtn" title="氛围白噪音" aria-label="氛围白噪音">
   <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -621,13 +649,13 @@
 <input type="file" id="fileInput" accept="image/*" aria-label="上传自定义壁纸">
 
 <!-- 核心脚本加载（util.js 必须最先加载） -->
-<script src="util.js?v=1.9.5"></script>
-<script src="db.js?v=1.9.5"></script>
-<script src="sound.js?v=1.9.5"></script>
-<script src="ambient.js?v=1.9.5"></script>
-<script src="particles.js?v=1.9.5"></script>
-<script src="window-rain.js?v=1.9.5"></script>
-<script src="app.js?v=1.9.5"></script>
+<script src="util.js?v=1.10.0"></script>
+<script src="db.js?v=1.10.0"></script>
+<script src="sound.js?v=1.10.0"></script>
+<script src="ambient.js?v=1.10.0"></script>
+<script src="particles.js?v=1.10.0"></script>
+<script src="window-rain.js?v=1.10.0"></script>
+<script src="app.js?v=1.10.0"></script>
 <script>
 /* Service Worker：仅在 http(s) 下注册；双击 index.html（file://）时浏览器不支持，直接跳过 */
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
